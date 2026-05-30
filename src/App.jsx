@@ -1,124 +1,741 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
+const IMG_THEMES = {
+  hero:       { bg: "linear-gradient(135deg, #003580 0%, #0ea5e9 100%)", emoji: "✈", label: "Explore the world" },
+  business:   { bg: "linear-gradient(135deg, #1a1a2e 0%, #003580 100%)", emoji: "💼", label: "Business travel" },
+  family:     { bg: "linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)", emoji: "👨‍👩‍👧", label: "Family holidays" },
+  couple:     { bg: "linear-gradient(135deg, #003580 0%, #7c3aed 100%)", emoji: "🥂", label: "Romantic escapes" },
+  adventure:  { bg: "linear-gradient(135deg, #064e3b 0%, #059669 100%)", emoji: "🧗", label: "Adventure" },
+  city:       { bg: "linear-gradient(135deg, #0f172a 0%, #003580 100%)", emoji: "🌆", label: "City breaks" },
+  foodie:     { bg: "linear-gradient(135deg, #7c2d12 0%, #dc2626 100%)", emoji: "🍽", label: "Food & culture" },
+  beach:      { bg: "linear-gradient(135deg, #0369a1 0%, #38bdf8 100%)", emoji: "🏖", label: "Beach holidays" },
+};
 
-const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0a0a0f; color: #e8e0d5; font-family: 'DM Sans', sans-serif; min-height: 100vh; }
-  .app { min-height: 100vh; background: #0a0a0f; position: relative; overflow-x: hidden; }
-  .app::before { content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at 60% 20%, rgba(180,140,80,0.06) 0%, transparent 50%), radial-gradient(ellipse at 20% 80%, rgba(100,120,160,0.05) 0%, transparent 50%); pointer-events: none; z-index: 0; }
-  .hero { position: relative; z-index: 1; padding: 80px 40px 60px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .logo { font-family: 'Cormorant Garamond', serif; font-size: clamp(48px, 8vw, 96px); font-weight: 300; letter-spacing: 0.15em; color: #e8e0d5; line-height: 1; margin-bottom: 12px; }
-  .logo span { color: #c9a84c; }
-  .tagline { font-size: 13px; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(232,224,213,0.4); font-weight: 300; }
-  .form-section { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 60px 40px; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-  .form-group { display: flex; flex-direction: column; gap: 8px; }
-  .form-group.full { grid-column: 1 / -1; }
-  label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(232,224,213,0.45); font-weight: 400; }
-  input, select, textarea { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #e8e0d5; padding: 14px 18px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 300; outline: none; transition: border-color 0.3s, background 0.3s; border-radius: 2px; width: 100%; }
-  input:focus, select:focus, textarea:focus { border-color: rgba(201,168,76,0.4); background: rgba(255,255,255,0.05); }
-  select option { background: #1a1a24; }
-  textarea { resize: vertical; min-height: 90px; }
-  .generate-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #c9a84c, #a8863a); color: #0a0a0f; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: opacity 0.3s, transform 0.2s; border-radius: 2px; margin-top: 8px; }
-  .generate-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
-  .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-  .loading { text-align: center; padding: 80px 40px; position: relative; z-index: 1; }
-  .loading-ring { width: 48px; height: 48px; border: 1px solid rgba(201,168,76,0.2); border-top-color: #c9a84c; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 24px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading p { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 300; font-style: italic; color: rgba(232,224,213,0.5); letter-spacing: 0.05em; }
-  .itinerary { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 60px 40px; }
-  .itinerary-header { margin-bottom: 60px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .itinerary-header h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 300; letter-spacing: 0.05em; color: #e8e0d5; margin-bottom: 8px; }
-  .itinerary-header h2 span { color: #c9a84c; font-style: italic; }
-  .itinerary-meta { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(232,224,213,0.35); }
-  .day-card { margin-bottom: 48px; display: grid; grid-template-columns: 80px 1fr; gap: 32px; animation: fadeUp 0.5s ease forwards; opacity: 0; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .day-number { padding-top: 4px; }
-  .day-num-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(201,168,76,0.6); display: block; margin-bottom: 4px; }
-  .day-num-value { font-family: 'Cormorant Garamond', serif; font-size: 48px; font-weight: 300; color: rgba(232,224,213,0.15); line-height: 1; }
-  .day-content { border-left: 1px solid rgba(255,255,255,0.06); padding-left: 32px; }
-  .day-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; color: #e8e0d5; margin-bottom: 16px; letter-spacing: 0.02em; }
-  .day-text { font-size: 15px; font-weight: 300; line-height: 1.8; color: rgba(232,224,213,0.7); white-space: pre-wrap; }
-  .reset-btn { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1px solid rgba(255,255,255,0.1); color: rgba(232,224,213,0.5); padding: 12px 24px; font-family: 'DM Sans', sans-serif; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; border-radius: 2px; margin-top: 40px; }
-  .reset-btn:hover { border-color: rgba(201,168,76,0.4); color: #c9a84c; }
-  .error { background: rgba(180,60,60,0.1); border: 1px solid rgba(180,60,60,0.2); color: #e07070; padding: 16px 20px; border-radius: 2px; font-size: 14px; margin-top: 16px; }
-  @media (max-width: 600px) { .hero { padding: 60px 24px 40px; } .form-section { padding: 40px 24px; } .form-grid { grid-template-columns: 1fr; } .itinerary { padding: 40px 24px; } .day-card { grid-template-columns: 1fr; gap: 12px; } .day-content { border-left: none; border-top: 1px solid rgba(255,255,255,0.06); padding-left: 0; padding-top: 16px; } }
-`;
-
-function parseDays(text) {
-  const lines = text.split("\n");
-  const days = [];
-  let current = null;
-  for (const line of lines) {
-    const m = line.match(/^#+\s*Day\s+(\d+)[:\s-]*(.*)$/i) || line.match(/^\*\*Day\s+(\d+)[:\s-]*(.*)\*\*$/i) || line.match(/^Day\s+(\d+)[:\s-]*(.*)$/i);
-    if (m) { if (current) days.push(current); current = { num: m[1], title: m[2].trim() || `Day ${m[1]}`, content: "" }; }
-    else if (current) current.content += line + "\n";
-  }
-  if (current) days.push(current);
-  return days.length === 0 ? [{ num: "1", title: "Your Itinerary", content: text }] : days;
+function SmartImage({ keywords, style }) {
+  const map = {
+    "travel adventure world destination": "hero",
+    "business travel professional airport": "business",
+    "family beach holiday children": "family",
+    "couple romantic sunset travel": "couple",
+    "adventure mountain hiking explore": "adventure",
+    "business professional travel": "business",
+    "city skyline night travel": "city",
+    "food restaurant market culture travel": "foodie",
+  };
+  const theme = IMG_THEMES[map[keywords]] || IMG_THEMES.hero;
+  return (
+    <div style={{
+      ...style,
+      background: theme.bg,
+      overflow: "hidden",
+      position: style?.position || "relative",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+    }}>
+      <span style={{ fontSize: 48, filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.3))" }}>{theme.emoji}</span>
+      <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif" }}>{theme.label}</span>
+    </div>
+  );
 }
 
-export default function App() {
-  const [form, setForm] = useState({ destination: "", startDate: "", endDate: "", travelers: "2", style: "balanced", notes: "" });
-  const [state, setState] = useState("idle");
-  const [days, setDays] = useState([]);
-  const [tripInfo, setTripInfo] = useState({});
-  const [error, setError] = useState("");
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+function PlaneOutline({ color = "#0ea5e9", size = 28 }) {
+  const s = size / 40;
+  return (
+    <g>
+      <path d={`M 0 ${-18*s} L ${3.5*s} ${-10*s} L ${4*s} ${8*s} L ${2.5*s} ${14*s} L 0 ${12*s} L ${-2.5*s} ${14*s} L ${-4*s} ${8*s} L ${-3.5*s} ${-10*s} Z`}
+        fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d={`M ${3*s} ${-2*s} L ${22*s} ${10*s} L ${20*s} ${14*s} L ${4*s} ${8*s}`}
+        fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d={`M ${-3*s} ${-2*s} L ${-22*s} ${10*s} L ${-20*s} ${14*s} L ${-4*s} ${8*s}`}
+        fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d={`M ${2.5*s} ${12*s} L ${9*s} ${18*s} L ${8*s} ${20*s} L ${2.5*s} ${16*s}`}
+        fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d={`M ${-2.5*s} ${12*s} L ${-9*s} ${18*s} L ${-8*s} ${20*s} L ${-2.5*s} ${16*s}`}
+        fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round"/>
+    </g>
+  );
+}
 
-  const generate = async () => {
-    if (!form.destination || !form.startDate || !form.endDate) { setError("Please fill in destination and dates."); return; }
-    setError(""); setState("loading");
-    const nights = Math.round((new Date(form.endDate) - new Date(form.startDate)) / 86400000);
-    const prompt = `Create a detailed day-by-day travel itinerary for ${form.destination}.\nTrip: ${form.startDate} to ${form.endDate} (${nights} nights), ${form.travelers} traveller(s).\nTravel style: ${form.style}.\n${form.notes ? `Special requests: ${form.notes}` : ""}\n\nFormat each day exactly like this:\nDay 1: [Evocative Title]\n[Detailed paragraph]\n\nWrite ${nights + 1} days total. Be vivid and specific.`;
+function RoamLogo({ width = 160 }) {
+  const scale = width / 160;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1 }}>
+      <svg width={width * 1.1} height={28 * scale} viewBox="0 0 260 32" fill="none" style={{ display: "block", marginBottom: -14 * scale }}>
+        <path d="M 50 16 C 100 8 160 10 218 20" stroke="#0ea5e9" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55" strokeDasharray="5 4"/>
+        <g transform="translate(218,20) rotate(107.6)">
+          <PlaneOutline color="#0ea5e9" size={20}/>
+        </g>
+      </svg>
+      <span style={{
+        fontFamily: "'Nunito', sans-serif",
+        fontWeight: 800,
+        fontSize: 36 * scale,
+        lineHeight: 1,
+        background: "linear-gradient(135deg, #003580 0%, #0ea5e9 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text",
+        letterSpacing: "-1px",
+      }}>TripDone</span>
+    </div>
+  );
+}
+
+function RoamLogoDark({ width = 160 }) {
+  const scale = width / 160;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1 }}>
+      <svg width={width * 1.1} height={28 * scale} viewBox="0 0 260 32" fill="none" style={{ display: "block", marginBottom: -14 * scale }}>
+        <path d="M 50 16 C 100 8 160 10 218 20" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55" strokeDasharray="5 4"/>
+        <g transform="translate(218,20) rotate(107.6)">
+          <PlaneOutline color="white" size={20}/>
+        </g>
+      </svg>
+      <span style={{
+        fontFamily: "'Nunito', sans-serif",
+        fontWeight: 800,
+        fontSize: 36 * scale,
+        color: "#fff",
+        lineHeight: 1,
+        letterSpacing: "-1px",
+      }}>TripDone</span>
+    </div>
+  );
+}
+
+function ColosseumLogo({ size = 32, color = "#fff" }) {
+  return (<svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="26" width="28" height="2" rx="1" fill={color} />
+    <path d="M4 26 C4 14 8 8 16 8 C24 8 28 14 28 26" stroke={color} strokeWidth="2" fill="none" strokeLinecap="round"/>
+    <path d="M8 26 L8 20 Q9.5 17 11 20 L11 26" stroke={color} strokeWidth="1.5" fill="none"/>
+    <path d="M14 26 L14 19 Q16 16 18 19 L18 26" stroke={color} strokeWidth="1.5" fill="none"/>
+    <path d="M21 26 L21 20 Q22.5 17 24 20 L24 26" stroke={color} strokeWidth="1.5" fill="none"/>
+    <path d="M6 19 L26 19" stroke={color} strokeWidth="1" opacity="0.6"/>
+    <path d="M10 19 L10 15 Q11 13.5 12 15 L12 19" stroke={color} strokeWidth="1" fill="none" opacity="0.8"/>
+    <path d="M15 19 L15 14 Q16 12.5 17 14 L17 19" stroke={color} strokeWidth="1" fill="none" opacity="0.8"/>
+    <path d="M20 19 L20 15 Q21 13.5 22 15 L22 19" stroke={color} strokeWidth="1" fill="none" opacity="0.8"/>
+  </svg>);
+}
+
+const JAPAN_EXAMPLE = {
+  destination: "Tokyo & Kyoto, Japan",
+  tagline: "Ancient temples, neon nights, and perfect ramen",
+  duration: "7 days",
+  hotel: { name: "The Tokyo Edition, Toranomon", area: "Toranomon, Tokyo", priceRange: "£320/night" },
+  alternatives: {
+    budget: { hotel: "Nui. Hostel & Bar Lounge", area: "Asakusa, Tokyo", priceRange: "£55/night", note: "Stylish social hostel in Tokyo's most atmospheric neighbourhood." },
+    luxury: { hotel: "Aman Tokyo", area: "Otemachi, Tokyo", priceRange: "£950/night", note: "Possibly the most serene hotel in Asia — 33 floors up, with views over the Imperial Palace Gardens." },
+  },
+  days: [
+    { day: 1, theme: "Arrival & First Impressions", morning: "Check in and explore Shibuya — walk the famous crossing at rush hour", afternoon: "Meiji Shrine and Harajuku's Takeshita Street", evening: "Dinner at Ichiran Ramen, Shibuya — solo ramen booths, iconic Tokyo experience", transport: "Suica card for the metro — buy at Narita or Haneda on arrival", insiderTip: "The Shibuya crossing is most dramatic from the Starbucks window on the second floor — arrive 5 mins before rush hour" },
+    { day: 2, theme: "Old Tokyo", morning: "Senso-ji Temple in Asakusa at 7am before the crowds arrive", afternoon: "Tokyo Skytree views then explore Nakamise shopping street", evening: "Yakitori under the train tracks at Yurakucho", transport: "Walk between Asakusa sights — everything is within 15 minutes", insiderTip: "The back streets behind Senso-ji are full of craft shops most tourists miss entirely" },
+    { day: 3, theme: "Art & Modern Tokyo", morning: "teamLab Planets in Toyosu — book weeks in advance", afternoon: "Explore Shimokitazawa's vintage shops and cafés", evening: "Dinner at Narisawa — one of Asia's best restaurants, book 2 months ahead", transport: "Odakyu line to Shimokitazawa from Shinjuku", insiderTip: "teamLab is magical at opening time — arrive exactly when doors open at 9am" },
+    { day: 4, theme: "Kyoto Day Trip", morning: "Shinkansen to Kyoto (2hrs 15min) — book seats the night before", afternoon: "Fushimi Inari shrine gates and Arashiyama bamboo grove", evening: "Kaiseki dinner at Kikunoi Rokuza then Shinkansen back", transport: "JR Pass or single Shinkansen tickets — either works for one day", insiderTip: "Fushimi Inari at dawn is otherworldly — catch the 6:30am train from Tokyo" },
+  ],
+  practicalInfo: {
+    bestTransport: "Suica IC card covers all metro and local trains.",
+    mustBook: "teamLab Planets (sells out weeks ahead), any omakase sushi, and Narisawa restaurant",
+    packingTip: "Bring a small backpack for day trips — coin lockers at every major station are a game changer",
+  },
+  packingList: {
+    essentials: ["Suica card (buy on arrival)", "Universal adapter (Type A)", "Portable WiFi or SIM", "Cash in Yen", "Comfortable walking shoes"],
+    clothing: ["Layers for temples (covered shoulders)", "Light rain jacket", "Smart casual for dinner", "Slip-on shoes for shrines"],
+    extras: ["Pocket umbrella", "Reusable tote bag", "Small notebook for menus"],
+  },
+};
+
+const FONT = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');`;
+const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');`;
+
+const ITINERARY_SYSTEM = `You are TripDone, a premium AI travel planner. Given a traveller's preferences, generate a detailed day-by-day itinerary as JSON.
+Return ONLY valid JSON, no markdown, no explanation. Format:
+{
+  "destination": "string",
+  "tagline": "short evocative description (max 10 words)",
+  "duration": "e.g. 7 days",
+  "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £280/night" },
+  "alternatives": {
+    "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £80/night", "note": "1 sentence" },
+    "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £450/night", "note": "1 sentence" }
+  },
+  "days": [{ "day": 1, "theme": "string", "morning": "string", "afternoon": "string", "evening": "string", "transport": "string", "insiderTip": "string" }],
+  "practicalInfo": { "bestTransport": "string", "mustBook": "string", "packingTip": "string" },
+  "packingList": { "essentials": ["item1","item2"], "clothing": ["item1","item2"], "extras": ["item1","item2"] }
+}
+Generate 4-7 days. Be specific with real place names. Make it feel curated, not generic.`;
+
+const REFINE_SYSTEM = `You are TripDone, a premium AI travel concierge. The user has an existing itinerary and wants to refine it. Respond conversationally and concisely — confirm what you've changed and why it's a great call. Keep responses under 3 sentences. Be warm, confident, and specific.`;
+
+async function callClaude(system, userMessage, maxTokens = 1500) {
+  const res = await fetch("https://tripdoneapi.tpritchard.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: "user", content: userMessage }],
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content.map(b => b.text || "").join("");
+}
+
+function DayCard({ day, index }) {
+  const [open, setOpen] = useState(index === 0);
+  return (
+    <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, overflow: "hidden", marginBottom: 12, background: "#fdfbf8", boxShadow: open ? "0 4px 20px rgba(0,0,0,0.06)" : "none", transition: "box-shadow 0.2s" }}>
+      <button onClick={() => setOpen(!open)} style={{ width: "100%", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#003580", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, flexShrink: 0 }}>{day.day}</div>
+          <div>
+            <div style={{ fontSize: 14, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: "#1a1a1a" }}>Day {day.day}</div>
+            <div style={{ fontSize: 13, fontFamily: "'Playfair Display', serif", fontStyle: "italic", color: "#888" }}>{day.theme}</div>
+          </div>
+        </div>
+        <span style={{ color: "#003580", fontSize: 18, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>⌄</span>
+      </button>
+      {open && (
+        <div style={{ padding: "0 20px 20px", animation: "fadeUp 0.2s ease" }}>
+          <div style={{ height: 1, background: "#e8e2d9", marginBottom: 16 }} />
+          {[{ label: "Morning", icon: "☀", value: day.morning }, { label: "Afternoon", icon: "⛅", value: day.afternoon }, { label: "Evening", icon: "🌙", value: day.evening }, { label: "Getting around", icon: "🚌", value: day.transport }].map(item => (
+            <div key={item.label} style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 3 }}>{item.icon} {item.label}</div>
+              <div style={{ fontSize: 14, color: "#333", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>{item.value}</div>
+            </div>
+          ))}
+          <div style={{ background: "#eef3ff", borderRadius: 8, padding: "10px 14px", borderLeft: "3px solid #003580", marginTop: 16 }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", fontFamily: "'DM Sans', sans-serif", marginBottom: 3 }}>✦ Insider tip</div>
+            <div style={{ fontSize: 13.5, color: "#003580", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>{day.insiderTip}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LoadingScreen({ destination }) {
+  const steps = ["Researching " + (destination || "your destination") + "...", "Curating the best hotels...", "Designing your itinerary...", "Adding insider touches..."];
+  const [stepIdx, setStepIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setStepIdx(i => Math.min(i + 1, steps.length - 1)), 1800);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div style={{ textAlign: "center", padding: "60px 0" }}>
+      <div style={{ fontSize: 40, marginBottom: 24, animation: "spin 3s linear infinite", display: "inline-block" }}>◎</div>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 400, color: "#1a1a1a", marginBottom: 12 }}>Building your trip</h2>
+      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "#003580", minHeight: 20 }}>{steps[stepIdx]}</p>
+      <div style={{ marginTop: 32, display: "flex", gap: 6, justifyContent: "center" }}>
+        {[0, 1, 2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#003580", animation: "bounce 1.2s infinite", animationDelay: `${i * 0.2}s` }} />)}
+      </div>
+    </div>
+  );
+}
+
+function ItineraryView({ itinerary, answers }) {
+  const [booked, setBooked] = useState({});
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatBottomRef = useRef(null);
+
+  useEffect(() => { chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages, chatLoading]);
+
+  async function sendChat() {
+    if (!chatInput.trim() || chatLoading) return;
+    const msg = chatInput.trim();
+    setChatInput("");
+    const newMsgs = [...chatMessages, { role: "user", content: msg }];
+    setChatMessages(newMsgs);
+    setChatLoading(true);
     try {
-      const res = await fetch("https://tripdoneapi.tpritchard.workers.dev", { method: "POST", headers: { "Content-Type": "application/json", }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 4000, messages: [{ role: "user", content: prompt }] }) });
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-      const data = await res.json();
-      const text = data.content.map(b => b.text || "").join("");
-      setDays(parseDays(text));
-      setTripInfo({ destination: form.destination, start: form.startDate, end: form.endDate, travelers: form.travelers });
-      setState("done");
-    } catch (e) { setError("Something went wrong. Check your API key and try again."); setState("idle"); }
-  };
+      const context = `Current itinerary: ${JSON.stringify(itinerary)}\nOriginal preferences: ${JSON.stringify(answers)}\nUser request: ${msg}`;
+      const reply = await callClaude(REFINE_SYSTEM, context, 400);
+      setChatMessages([...newMsgs, { role: "assistant", content: reply }]);
+    } catch {
+      setChatMessages([...newMsgs, { role: "assistant", content: "Sorry, something went wrong. Try again." }]);
+    } finally { setChatLoading(false); }
+  }
 
   return (
-    <>
-      <style>{STYLES}</style>
-      <div className="app">
-        <div className="hero">
-          <div className="logo">TRIP<span>DONE</span></div>
-          <div className="tagline">AI-Powered Travel Itineraries</div>
-        </div>
-        {state === "idle" && (
-          <div className="form-section">
-            <div className="form-grid">
-              <div className="form-group full"><label>Destination</label><input placeholder="e.g. Tokyo, Japan" value={form.destination} onChange={e => set("destination", e.target.value)} /></div>
-              <div className="form-group"><label>Start Date</label><input type="date" value={form.startDate} onChange={e => set("startDate", e.target.value)} /></div>
-              <div className="form-group"><label>End Date</label><input type="date" value={form.endDate} onChange={e => set("endDate", e.target.value)} /></div>
-              <div className="form-group"><label>Travellers</label><select value={form.travelers} onChange={e => set("travelers", e.target.value)}>{[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} {n===1?"person":"people"}</option>)}</select></div>
-              <div className="form-group"><label>Travel Style</label><select value={form.style} onChange={e => set("style", e.target.value)}><option value="balanced">Balanced</option><option value="luxury">Luxury</option><option value="budget">Budget</option><option value="adventure">Adventure</option><option value="cultural">Cultural</option><option value="family">Family</option><option value="romantic">Romantic</option><option value="foodie">Foodie</option></select></div>
-              <div className="form-group full"><label>Special Requests (optional)</label><textarea placeholder="e.g. vegetarian food, no early mornings..." value={form.notes} onChange={e => set("notes", e.target.value)} /></div>
-            </div>
-            {error && <div className="error">{error}</div>}
-            <button className="generate-btn" onClick={generate}>Plan My Trip →</button>
+    <div style={{ animation: "fadeUp 0.5s ease" }}>
+      <div style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #2d2418 100%)", borderRadius: 16, padding: "28px 24px", marginBottom: 20, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120, borderRadius: "50%", background: "rgba(0,53,128,0.15)" }} />
+        <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "#0ea5e9", textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>Your TripDone itinerary</div>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, color: "#fff", fontWeight: 400, margin: "0 0 6px" }}>{itinerary.destination}</h1>
+        <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", color: "#0ea5e9", fontSize: 15, margin: "0 0 20px" }}>{itinerary.tagline}</p>
+      </div>
+
+      <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, padding: "18px 20px", marginBottom: 16, background: "#fdfbf8" }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 10 }}>🏨 Recommended stay</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: "#1a1a1a", marginBottom: 3 }}>{itinerary.hotel.name}</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: "#888", marginBottom: 6 }}>{itinerary.hotel.area}</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, color: "#555", lineHeight: 1.5 }}>{itinerary.hotel.description}</div>
           </div>
-        )}
-        {state === "loading" && (<div className="loading"><div className="loading-ring"></div><p>Crafting your perfect itinerary…</p></div>)}
-        {state === "done" && (
-          <div className="itinerary">
-            <div className="itinerary-header"><h2><span>{tripInfo.destination}</span></h2><div className="itinerary-meta">{tripInfo.start} → {tripInfo.end} · {tripInfo.travelers} traveller{tripInfo.travelers>1?"s":""}</div></div>
-            {days.map((day, i) => (
-              <div className="day-card" key={i} style={{ animationDelay: `${i * 0.1}s` }}>
-                <div className="day-number"><span className="day-num-label">Day</span><span className="day-num-value">{day.num}</span></div>
-                <div className="day-content"><div className="day-title">{day.title}</div><div className="day-text">{day.content.trim()}</div></div>
+          <div style={{ background: "#eef3ff", borderRadius: 8, padding: "6px 12px", fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#003580", fontWeight: 500, whiteSpace: "nowrap", marginLeft: 12, flexShrink: 0 }}>{itinerary.hotel.priceRange}</div>
+        </div>
+      </div>
+
+      <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 12 }}>Day by day</div>
+      {itinerary.days.map((day, i) => <DayCard key={i} day={day} index={i} />)}
+
+      <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, padding: "18px 20px", marginBottom: 20, background: "#fdfbf8" }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 14 }}>✦ Practical notes</div>
+        {[{ label: "Getting around", value: itinerary.practicalInfo?.bestTransport }, { label: "Pre-book", value: itinerary.practicalInfo?.mustBook }, { label: "Packing tip", value: itinerary.practicalInfo?.packingTip }].map(item => item.value ? (
+          <div key={item.label} style={{ marginBottom: 10 }}>
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 500, color: "#888", marginRight: 8 }}>{item.label}:</span>
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, color: "#444" }}>{item.value}</span>
+          </div>
+        ) : null)}
+      </div>
+
+      <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, overflow: "hidden", background: "#fdfbf8", marginBottom: 32 }}>
+        <button onClick={() => setChatOpen(!chatOpen)} style={{ width: "100%", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: chatOpen ? "#1a1a1a" : "transparent", border: "none", cursor: "pointer", transition: "background 0.2s" }}>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, color: chatOpen ? "#fff" : "#1a1a1a" }}>Want to change anything?</span>
+          <span style={{ color: chatOpen ? "#0ea5e9" : "#888", fontSize: 18, transform: chatOpen ? "rotate(180deg)" : "none" }}>⌄</span>
+        </button>
+        {chatOpen && (
+          <div style={{ borderTop: "1px solid #e8e2d9" }}>
+            {chatMessages.length === 0 && (
+              <div style={{ padding: "14px 20px" }}>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#888", margin: 0 }}>Tell me anything you'd like to adjust — hotel, a specific day, activities, pace, budget...</p>
               </div>
-            ))}
-            <button className="reset-btn" onClick={() => { setState("idle"); setDays([]); }}>← Plan Another Trip</button>
+            )}
+            {chatMessages.length > 0 && (
+              <div style={{ maxHeight: 260, overflowY: "auto", padding: "14px 20px" }}>
+                {chatMessages.map((m, i) => (
+                  <div key={i} style={{ marginBottom: 12, display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+                    <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: m.role === "user" ? "#1a1a1a" : "#f0ebe3", color: m.role === "user" ? "#fff" : "#333", fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, lineHeight: 1.5 }}>{m.content}</div>
+                  </div>
+                ))}
+                {chatLoading && <div style={{ display: "flex", gap: 5 }}>{[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#003580", animation: "bounce 1.2s infinite", animationDelay: `${i * 0.2}s` }} />)}</div>}
+                <div ref={chatBottomRef} />
+              </div>
+            )}
+            <div style={{ padding: "12px 16px", borderTop: "1px solid #f0ebe3", display: "flex", gap: 8 }}>
+              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChat()} placeholder="e.g. Replace the museum with something outdoors..." style={{ flex: 1, padding: "10px 14px", border: "1.5px solid #e8e2d9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", color: "#1a1a1a", background: "#fff", outline: "none" }} />
+              <button onClick={sendChat} disabled={!chatInput.trim() || chatLoading} style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: chatInput.trim() && !chatLoading ? "#1a1a1a" : "#e8e2d9", color: chatInput.trim() && !chatLoading ? "#fff" : "#aaa", fontFamily: "'DM Sans', sans-serif", fontSize: 14, cursor: chatInput.trim() ? "pointer" : "not-allowed" }}>→</button>
+            </div>
           </div>
         )}
       </div>
-    </>
+    </div>
+  );
+}
+
+function ScrollQuiz({ answers, setAnswers, onSubmit, error }) {
+  const set = (id, val) => setAnswers(prev => ({ ...prev, [id]: val }));
+  const isComplete = !!(answers.destination && answers.tripType && answers.dates?.start && answers.dates?.end && Object.values(answers.travellers || {}).reduce((a,b)=>a+b,0) >= 1 && answers.budget?.max > answers.budget?.min && answers.pace && (answers.interests||[]).length > 0);
+
+  const sectionStyle = { background: "#fff", borderRadius: 16, padding: "28px 24px", marginBottom: 16, border: "1.5px solid #e8edf5", boxShadow: "0 2px 12px rgba(0,53,128,0.06)" };
+  const labelStyle = { fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 400, color: "#1a1a1a", marginBottom: 4, display: "block" };
+  const hintStyle = { fontSize: 13, color: "#999", marginBottom: 16, display: "block", fontFamily: "'DM Sans', sans-serif" };
+
+  return (
+    <div>
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 6 }}>Plan your trip</h1>
+        <p style={{ fontSize: 14, color: "#888", lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>Fill in the details below and we'll build your perfect itinerary.</p>
+      </div>
+
+      {error && <div style={{ background: "#fef0f0", border: "1px solid #f5c6c6", borderRadius: 8, padding: "12px 16px", marginBottom: 16, fontSize: 13, color: "#c0392b" }}>{error}</div>}
+
+      <div style={sectionStyle}>
+        <span style={labelStyle}>Where do you want to go?</span>
+        <span style={hintStyle}>City, country, or region — even 'surprise me'</span>
+        <input value={answers.destination || ""} onChange={e => set("destination", e.target.value)} placeholder="e.g. Japan, Amalfi Coast, New York..." style={{ width: "100%", padding: "13px 16px", border: `1.5px solid ${answers.destination ? "#003580" : "#e0e6f0"}`, borderRadius: 10, fontSize: 15, fontFamily: "'DM Sans', sans-serif", color: "#1a1a1a", background: "#fafbff", outline: "none", boxSizing: "border-box" }} />
+      </div>
+
+      <div style={sectionStyle}>
+        <span style={labelStyle}>What kind of trip is this?</span>
+        <span style={hintStyle}>This shapes everything — your hotel, pace, and activities</span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {[{ value: "business", icon: "💼", label: "Business", sub: "Work trips, conferences" }, { value: "relax", icon: "🌿", label: "Relax & Unwind", sub: "Recharge, slow down" }, { value: "adventure", icon: "🧗", label: "Adventure", sub: "Hiking, thrills, outdoors" }, { value: "culture", icon: "🏛", label: "Culture & History", sub: "Art, museums, local life" }, { value: "romance", icon: "🥂", label: "Romance", sub: "Couples, anniversary" }, { value: "family", icon: "👨‍👩‍👧", label: "Family", sub: "Kid-friendly for everyone" }, { value: "foodie", icon: "🍽", label: "Food & Drink", sub: "Restaurants, markets, wine" }, { value: "wellness", icon: "🧘", label: "Wellness", sub: "Spa, yoga, reset" }].map(opt => {
+            const sel = answers.tripType === opt.value;
+            return <button key={opt.value} onClick={() => set("tripType", opt.value)} style={{ padding: "12px 14px", borderRadius: 10, textAlign: "left", border: `1.5px solid ${sel ? "#003580" : "#e0e6f0"}`, background: sel ? "#eef3ff" : "#fafbff", cursor: "pointer", transition: "all 0.15s" }}>
+              <div style={{ fontSize: 20, marginBottom: 4 }}>{opt.icon}</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, fontWeight: 500, color: sel ? "#003580" : "#1a1a1a" }}>{opt.label}</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11.5, color: sel ? "#003580" : "#aaa", marginTop: 2 }}>{opt.sub}</div>
+            </button>;
+          })}
+        </div>
+      </div>
+
+      <div style={sectionStyle}>
+        <span style={labelStyle}>What dates do you plan to go?</span>
+        <span style={hintStyle}>Select your departure and return date</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {[{ label: "Departure date", key: "start" }, { label: "Return date", key: "end" }].map(({ label, key }) => (
+            <div key={key}>
+              <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 6 }}>{label}</div>
+              <input type="date" value={(answers.dates || {})[key] || ""} min={key === "end" ? (answers.dates?.start || "") : new Date().toISOString().split("T")[0]} onChange={e => set("dates", { ...(answers.dates || {}), [key]: e.target.value })} style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${(answers.dates || {})[key] ? "#003580" : "#e0e6f0"}`, borderRadius: 10, fontSize: 16, fontFamily: "'DM Sans', sans-serif", color: "#1a1a1a", background: "#fafbff", outline: "none", boxSizing: "border-box" }} />
+            </div>
+          ))}
+          {answers.dates?.start && answers.dates?.end && answers.dates.end >= answers.dates.start && (
+            <div style={{ background: "#eef3ff", borderRadius: 8, padding: "8px 14px", fontSize: 13, color: "#003580", fontFamily: "'DM Sans', sans-serif" }}>
+              {Math.round((new Date(answers.dates.end) - new Date(answers.dates.start)) / (1000*60*60*24))} nights
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={sectionStyle}>
+        <span style={labelStyle}>Who's coming?</span>
+        <span style={hintStyle}>We'll tailor activities and find the best prices for your group</span>
+        {[{ key: "adults", label: "Adults", sub: "18–64 years old", min: 0 }, { key: "children", label: "Children", sub: "0–17 years old", min: 0 }, { key: "pensioners", label: "Pensioners", sub: "65+ years old", min: 0 }].map(({ key, label, sub, min }) => {
+          const count = (answers.travellers || {})[key] ?? 0;
+          return (
+            <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: "1px solid #f0f4ff" }}>
+              <div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14.5, fontWeight: 500, color: "#1a1a1a" }}>{label}</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#aaa", marginTop: 2 }}>{sub}</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <button onClick={() => set("travellers", { ...(answers.travellers || {}), [key]: Math.max(min, count - 1) })} disabled={count <= min} style={{ width: 36, height: 36, borderRadius: 8, border: `1.5px solid ${count <= min ? "#e0e6f0" : "#003580"}`, background: "transparent", color: count <= min ? "#ccc" : "#003580", fontSize: 20, cursor: count <= min ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 500, color: "#1a1a1a", minWidth: 20, textAlign: "center" }}>{count}</span>
+                <button onClick={() => set("travellers", { ...(answers.travellers || {}), [key]: count + 1 })} style={{ width: 36, height: 36, borderRadius: 8, border: "1.5px solid #003580", background: "transparent", color: "#003580", fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={sectionStyle}>
+        <span style={labelStyle}>What's your budget per person?</span>
+        <span style={hintStyle}>Set a minimum and maximum</span>
+        {(() => {
+          const STEP = 500, MIN = 0, MAX = 10000;
+          const curMin = answers.budget?.min ?? 0;
+          const curMax = answers.budget?.max ?? 5000;
+          const fmt = v => v >= MAX ? `£${MAX.toLocaleString()}+` : `£${v.toLocaleString()}`;
+          const pct = v => ((v - MIN) / (MAX - MIN)) * 100;
+          return (
+            <div>
+              <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+                <div style={{ flex: 1, background: "#eef3ff", borderRadius: 10, padding: "12px", textAlign: "center", border: "1.5px solid #003580" }}>
+                  <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>Minimum</div>
+                  <div style={{ fontSize: 20, fontFamily: "'Playfair Display', serif", color: "#1a1a1a" }}>{fmt(curMin)}</div>
+                </div>
+                <div style={{ flex: 1, background: "#1a1a1a", borderRadius: 10, padding: "12px", textAlign: "center" }}>
+                  <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "#0ea5e9", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>Maximum</div>
+                  <div style={{ fontSize: 20, fontFamily: "'Playfair Display', serif", color: "#fff" }}>{fmt(curMax)}</div>
+                </div>
+              </div>
+              {[{ label: "Minimum", val: curMin, isMin: true }, { label: "Maximum", val: curMax, isMin: false }].map(({ label, val, isMin }) => (
+                <div key={label} style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, color: "#aaa", fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label} budget</span>
+                    <span style={{ fontSize: 12, color: isMin ? "#003580" : "#1a1a1a", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>{fmt(val)}</span>
+                  </div>
+                  <div style={{ position: "relative", height: 6, background: "#e0e6f0", borderRadius: 3 }}>
+                    <div style={{ position: "absolute", left: 0, width: `${pct(val)}%`, height: "100%", background: isMin ? "#003580" : "#1a1a1a", borderRadius: 3 }} />
+                    <input type="range" min={MIN} max={MAX} step={STEP} value={val} onChange={e => { const v = Number(e.target.value); if (isMin) set("budget", { min: v, max: Math.max(curMax, v + STEP) }); else set("budget", { min: Math.min(curMin, v - STEP), max: v }); }} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", margin: 0 }} />
+                    <div style={{ position: "absolute", top: "50%", transform: "translate(-50%,-50%)", left: `${pct(val)}%`, width: 18, height: 18, borderRadius: "50%", background: "#fff", border: `2.5px solid ${isMin ? "#003580" : "#1a1a1a"}`, pointerEvents: "none" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
+
+      <div style={sectionStyle}>
+        <span style={labelStyle}>How do you like to travel?</span>
+        <span style={hintStyle}>This shapes how many activities we plan each day</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {[{ value: "packed", label: "Packed", sub: "I want it all", dots: 5 }, { value: "balanced", label: "Balanced", sub: "Some activities, some chill days", dots: 4 }, { value: "relaxed", label: "Relaxed", sub: "The odd activity", dots: 3 }, { value: "one_per_day", label: "One a Day", sub: "1 activity per day", dots: 2 }, { value: "spontaneous", label: "Spontaneous", sub: "Only 1–2 planned total", dots: 1 }, { value: "transport", label: "Transport & Accommodation Only", sub: "No activities planned", dots: 0 }].map(opt => {
+            const sel = answers.pace === opt.value;
+            return <button key={opt.value} onClick={() => set("pace", opt.value)} style={{ padding: "13px 16px", borderRadius: 10, textAlign: "left", border: `1.5px solid ${sel ? "#003580" : "#e0e6f0"}`, background: sel ? "#eef3ff" : "#fafbff", cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, color: sel ? "#003580" : "#1a1a1a" }}>{opt.label} <span style={{ fontWeight: 300, color: sel ? "#003580" : "#888" }}>— {opt.sub}</span></div>
+              <div style={{ display: "flex", gap: 3 }}>{[1,2,3,4,5].map(i => <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: i <= opt.dots ? (sel ? "#003580" : "#1a1a1a") : "#e0e6f0" }} />)}</div>
+            </button>;
+          })}
+        </div>
+      </div>
+
+      <div style={sectionStyle}>
+        <span style={labelStyle}>What matters most to you?</span>
+        <span style={hintStyle}>Pick everything that applies</span>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {["Food & restaurants", "Art & culture", "Nature & outdoors", "Nightlife", "Luxury & wellness", "History", "Hidden gems", "Shopping", "Architecture", "Music & live events", "Photography", "Sport & fitness", "Local markets", "Beaches", "Wildlife", "Religious sites"].map(opt => {
+            const sel = (answers.interests || []).includes(opt);
+            return <button key={opt} onClick={() => set("interests", sel ? (answers.interests||[]).filter(x=>x!==opt) : [...(answers.interests||[]), opt])} style={{ padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${sel ? "#003580" : "#e0e6f0"}`, background: sel ? "#eef3ff" : "#fafbff", color: sel ? "#003580" : "#555", fontFamily: "'DM Sans', sans-serif", fontSize: 13, cursor: "pointer", fontWeight: sel ? 500 : 400 }}>{opt}</button>;
+          })}
+        </div>
+      </div>
+
+      <button onClick={onSubmit} disabled={!isComplete} style={{ width: "100%", padding: "16px", borderRadius: 12, background: isComplete ? "#003580" : "#e0e6f0", border: "none", color: isComplete ? "#fff" : "#aaa", fontSize: 16, fontWeight: 500, cursor: isComplete ? "pointer" : "not-allowed", fontFamily: "'DM Sans', sans-serif", boxShadow: isComplete ? "0 6px 24px rgba(0,53,128,0.3)" : "none", transition: "all 0.2s" }}>
+        {isComplete ? "Build my trip →" : "Complete all sections to continue"}
+      </button>
+    </div>
+  );
+}
+
+function RoamApp() {
+  const [screen, setScreen] = useState("quiz");
+  const [answers, setAnswers] = useState({});
+  const [itinerary, setItinerary] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function generateItinerary() {
+    setScreen("loading");
+    setError(null);
+    try {
+      const dates = answers.dates?.start && answers.dates?.end ? `${answers.dates.start} to ${answers.dates.end}` : answers.dates;
+      const prompt = `Build a trip itinerary:\nDestination: ${answers.destination}\nTrip type: ${answers.tripType}\nDates: ${dates}\nTravellers: ${typeof answers.travellers === 'object' ? Object.entries(answers.travellers).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') : answers.travellers}\nBudget: ${typeof answers.budget === 'object' ? `£${answers.budget.min?.toLocaleString()} – £${answers.budget.max >= 10000 ? '10,000+' : answers.budget.max?.toLocaleString()}` : answers.budget}\nPace: ${answers.pace}\nInterests: ${(answers.interests || []).join(", ")}`;
+      const raw = await callClaude(ITINERARY_SYSTEM, prompt, 2000);
+      const clean = raw.replace(/```json|```/g, "").trim();
+      const data = JSON.parse(clean);
+      setItinerary(data);
+      setScreen("itinerary");
+    } catch (err) {
+      setError("Something went wrong building your itinerary. Please try again.");
+      setScreen("quiz");
+    }
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f8f9ff", fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`${FONT} @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}} @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}} @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}} *{box-sizing:border-box;margin:0;padding:0;} input,button,textarea{font-family:inherit;} ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px;}`}</style>
+      <div style={{ maxWidth: 560, margin: "0 auto", padding: "32px 20px 60px" }}>
+        {screen === "quiz" && <ScrollQuiz answers={answers} setAnswers={setAnswers} onSubmit={generateItinerary} error={error} />}
+        {screen === "loading" && <LoadingScreen destination={answers.destination} />}
+        {screen === "itinerary" && itinerary && <ItineraryView itinerary={itinerary} answers={answers} />}
+      </div>
+    </div>
+  );
+}
+
+const STEPS = [
+  { num: "01", title: "Tell us about your trip", desc: "Answer a few smart questions — destination, dates, who's coming, your pace. Takes under two minutes." },
+  { num: "02", title: "We build your itinerary", desc: "Our AI crafts a complete day-by-day plan — hotel, activities, transport, and dining — tailored precisely to you." },
+  { num: "03", title: "Review and refine", desc: "Browse your trip in full. Want to change anything? Just ask. We'll adjust it instantly." },
+  { num: "04", title: "Book in one place", desc: "Every booking link pre-filled and ready. Flights, hotels, activities — all platforms, all in one screen." },
+];
+
+const AUDIENCES = [
+  { kw: "business travel professional airport", label: "Business Travel", desc: "Seamless trips that keep you productive and comfortable — every time." },
+  { kw: "family beach holiday children", label: "Family Holidays", desc: "Itineraries that work for every age. Kids, pensioners, and everyone between." },
+  { kw: "couple romantic sunset travel", label: "Couples & Romance", desc: "Anniversary trips, honeymoons, weekend escapes — curated with care." },
+  { kw: "adventure mountain hiking explore", label: "Adventure & Exploration", desc: "Off the beaten path, fully planned. All the thrill, none of the admin." },
+];
+
+const PLATFORMS = ["Booking.com", "Skyscanner", "GetYourGuide", "Airbnb", "Trip.com", "Viator", "TripAdvisor", "Hostelworld"];
+
+function useInView(ref) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold: 0.15 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return inView;
+}
+
+function FadeIn({ children, delay = 0, style = {} }) {
+  const ref = useRef();
+  const inView = useInView(ref);
+  return (
+    <div ref={ref} style={{ opacity: inView ? 1 : 0, transform: inView ? "translateY(0)" : "translateY(28px)", transition: `opacity 0.7s ease ${delay}s, transform 0.7s ease ${delay}s`, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+export default function RoamHomepage() {
+  const [showApp, setShowApp] = useState(false);
+
+  if (showApp) {
+    return (
+      <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
+        <style>{`${FONTS} *{box-sizing:border-box;margin:0;padding:0;}`}</style>
+        <nav style={{ padding: "12px 40px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.97)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(0,53,128,0.08)", position: "sticky", top: 0, zIndex: 100 }}>
+          <RoamLogo width={130} />
+          <button onClick={() => setShowApp(false)} style={{ padding: "9px 22px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: "0 4px 16px rgba(0,53,128,0.35)" }}>← Home</button>
+        </nav>
+        <RoamApp />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ fontFamily: "'DM Sans', sans-serif", color: "#1a1a1a", background: "#ffffff", overflowX: "hidden" }}>
+      <style>{`
+        ${FONTS}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(28px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #003580; border-radius: 2px; }
+      `}</style>
+
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "12px 40px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(0,53,128,0.08)" }}>
+        <RoamLogo width={130} />
+        <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+          {["How it works", "Who it's for", "Platforms"].map(link => (
+            <span key={link} style={{ fontSize: 13, fontWeight: 400, color: "#555", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>{link}</span>
+          ))}
+        </div>
+        <button onClick={() => setShowApp(true)} style={{ padding: "9px 22px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 500, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,53,128,0.35)" }}>Plan my trip</button>
+      </nav>
+
+      <div style={{ position: "relative", minHeight: "100vh", background: "#ffffff", display: "flex", flexDirection: "column", justifyContent: "center", overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "120px 24px 80px" }}>
+          <p style={{ fontSize: 12, letterSpacing: "0.3em", textTransform: "uppercase", color: "#003580", marginBottom: 20, fontWeight: 500 }}>AI-Powered Travel Agent</p>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(48px, 8vw, 96px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.05, marginBottom: 24, letterSpacing: "-0.01em" }}>
+            Your perfect trip,<br /><em style={{ fontStyle: "italic", color: "#003580" }}>planned for you.</em>
+          </h1>
+          <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "#666", maxWidth: 520, margin: "0 auto 40px", lineHeight: 1.7, fontWeight: 300 }}>Tell us where you want to go and what you love. We'll handle everything else.</p>
+          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={() => setShowApp(true)} style={{ padding: "15px 36px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 15, fontWeight: 500, cursor: "pointer", boxShadow: "0 8px 32px rgba(0,53,128,0.3)" }}>Plan my trip for free →</button>
+            <button style={{ padding: "15px 36px", borderRadius: 6, background: "transparent", border: "1.5px solid #003580", color: "#003580", fontSize: 15, fontWeight: 400, cursor: "pointer" }}>See how it works</button>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "#003580", padding: "14px 0", overflow: "hidden" }}>
+        <div style={{ display: "flex", animation: "ticker 12s linear infinite", whiteSpace: "nowrap" }}>
+          {[...PLATFORMS, ...PLATFORMS].map((p, i) => (
+            <span key={i} style={{ fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7ab8e8", padding: "0 16px" }}>{p} <span style={{ color: "#4a90c4", margin: "0 0 0 16px" }}>◆</span></span>
+          ))}
+        </div>
+      </div>
+
+      <section style={{ padding: "100px 40px", maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+        <FadeIn>
+          <p style={{ fontSize: 12, letterSpacing: "0.2em", color: "#003580", textTransform: "uppercase", marginBottom: 12 }}>Why TripDone</p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 300, lineHeight: 1.2, color: "#1a1a1a", marginBottom: 28 }}>
+            Travel should feel like an escape,<br /><em>not a second job.</em>
+          </h2>
+          <p style={{ fontSize: 17, color: "#666", lineHeight: 1.8, maxWidth: 640, margin: "0 auto 24px", fontWeight: 300 }}>
+            Most people spend more time planning their holiday than enjoying it. TripDone changes that. We ask the right questions, then build your entire trip — every hotel, every day, every booking.
+          </p>
+        </FadeIn>
+      </section>
+
+      <section style={{ padding: "0 40px 100px", maxWidth: 1200, margin: "0 auto" }}>
+        <FadeIn>
+          <p style={{ fontSize: 12, letterSpacing: "0.2em", color: "#003580", textTransform: "uppercase", marginBottom: 12, textAlign: "center" }}>Who it's for</p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 300, textAlign: "center", marginBottom: 52, color: "#1a1a1a" }}>Built for every kind of traveller</h2>
+        </FadeIn>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+          {AUDIENCES.map((a, i) => (
+            <div key={a.label} style={{ opacity: 0, transform: "translateY(28px)", animation: `fadeUp 0.7s ease ${i * 0.1}s forwards` }}>
+              <div style={{ borderRadius: 14, overflow: "hidden", position: "relative", height: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
+                <SmartImage keywords={a.kw} style={{ width: "100%", height: "100%", position: "absolute", inset: 0 }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.05) 55%)" }} />
+                <div style={{ position: "absolute", bottom: 22, left: 22, right: 22 }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: "#fff", marginBottom: 6 }}>{a.label}</div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{a.desc}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ background: "#003580", padding: "100px 40px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <FadeIn>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 300, color: "#fff", textAlign: "center", marginBottom: 64 }}>
+              From idea to itinerary<br /><em style={{ color: "#7ba4db" }}>in minutes</em>
+            </h2>
+          </FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 32 }}>
+            {STEPS.map((s, i) => (
+              <FadeIn key={s.num} delay={i * 0.12}>
+                <div style={{ padding: "32px 28px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 48, fontWeight: 300, color: "#ffffff", lineHeight: 1, marginBottom: 20, opacity: 0.8 }}>{s.num}</div>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: "#fff", marginBottom: 12, lineHeight: 1.3 }}>{s.title}</h3>
+                  <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, fontWeight: 300 }}>{s.desc}</p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding: "100px 40px", background: "#f8f9ff" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <FadeIn>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 300, color: "#1a1a1a", textAlign: "center", marginBottom: 48 }}>A real TripDone itinerary</h2>
+          </FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 24, alignItems: "start" }}>
+            <div>
+              <FadeIn delay={0.1}>
+                <div style={{ background: "#1a1a1a", borderRadius: 14, padding: "22px 20px", marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#0ea5e9", fontFamily: "'DM Sans', sans-serif", marginBottom: 10 }}>Recommended stay</div>
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "#fff", marginBottom: 4 }}>{JAPAN_EXAMPLE.hotel.name}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>{JAPAN_EXAMPLE.hotel.area}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: "#0ea5e9" }}>{JAPAN_EXAMPLE.hotel.priceRange}</div>
+                </div>
+              </FadeIn>
+            </div>
+            <div>
+              {JAPAN_EXAMPLE.days.slice(0, 3).map((day, i) => (
+                <FadeIn key={day.day} delay={i * 0.08}>
+                  <div style={{ border: "1.5px solid #e0e6f0", borderRadius: 12, padding: "16px 18px", marginBottom: 10, background: "#fff" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#003580", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, flexShrink: 0 }}>{day.day}</div>
+                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: "#1a1a1a" }}>{day.theme}</div>
+                    </div>
+                    {[{ icon: "☀", val: day.morning }, { icon: "⛅", val: day.afternoon }, { icon: "🌙", val: day.evening }].map((item, j) => (
+                      <div key={j} style={{ display: "flex", gap: 8, marginBottom: 5 }}>
+                        <span style={{ fontSize: 12, flexShrink: 0 }}>{item.icon}</span>
+                        <span style={{ fontSize: 12.5, color: "#555", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4 }}>{item.val}</span>
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 8, padding: "8px 12px", background: "#eef3ff", borderRadius: 8, borderLeft: "3px solid #003580" }}>
+                      <span style={{ fontSize: 11, color: "#003580", fontFamily: "'DM Sans', sans-serif" }}>✦ {day.insiderTip}</span>
+                    </div>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+          <FadeIn delay={0.3}>
+            <div style={{ textAlign: "center", marginTop: 52 }}>
+              <button onClick={() => setShowApp(true)} style={{ padding: "15px 40px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 15, fontWeight: 500, cursor: "pointer", boxShadow: "0 8px 32px rgba(0,53,128,0.3)", fontFamily: "'DM Sans', sans-serif" }}>Build my trip like this →</button>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      <section style={{ position: "relative", overflow: "hidden", margin: "0 40px 80px", borderRadius: 20, background: "#003580" }}>
+        <div style={{ position: "relative", padding: "80px 40px", textAlign: "center" }}>
+          <FadeIn>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 5vw, 60px)", fontWeight: 300, color: "#fff", marginBottom: 16, lineHeight: 1.1 }}>
+              Your next adventure<br /><em style={{ color: "#7ba4db" }}>starts here.</em>
+            </h2>
+            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", marginBottom: 40, fontWeight: 300 }}>Free to use. No account needed. Just tell us where you want to go.</p>
+            <button onClick={() => setShowApp(true)} style={{ padding: "16px 44px", borderRadius: 6, background: "#fff", border: "none", color: "#003580", fontSize: 16, fontWeight: 500, cursor: "pointer", boxShadow: "0 8px 32px rgba(255,255,255,0.2)" }}>Plan my trip for free →</button>
+          </FadeIn>
+        </div>
+      </section>
+
+      <footer style={{ background: "#003580", padding: "48px 40px 32px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 32, marginBottom: 40 }}>
+            <div>
+              <RoamLogoDark width={110} />
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", maxWidth: 240, lineHeight: 1.6, marginTop: 12 }}>AI-powered travel planning for busy people. Your trip, done.</p>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>© 2026 TripDone. All rights reserved.</span>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Built by Thomas A Pritchard</span>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
