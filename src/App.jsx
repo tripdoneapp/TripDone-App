@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-const API_KEY = "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";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
@@ -74,7 +73,7 @@ export default function App() {
     const nights = Math.round((new Date(form.endDate) - new Date(form.startDate)) / 86400000);
     const prompt = `Create a detailed day-by-day travel itinerary for ${form.destination}.\nTrip: ${form.startDate} to ${form.endDate} (${nights} nights), ${form.travelers} traveller(s).\nTravel style: ${form.style}.\n${form.notes ? `Special requests: ${form.notes}` : ""}\n\nFormat each day exactly like this:\nDay 1: [Evocative Title]\n[Detailed paragraph]\n\nWrite ${nights + 1} days total. Be vivid and specific.`;
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json", "x-api-key": API_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 4000, messages: [{ role: "user", content: prompt }] }) });
+      const res = await fetch("https://tripdoneapi.tpritchard.workers.dev", { method: "POST", headers: { "Content-Type": "application/json", }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 4000, messages: [{ role: "user", content: prompt }] }) });
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
       const text = data.content.map(b => b.text || "").join("");
