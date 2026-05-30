@@ -264,7 +264,6 @@ function LoadingScreen({ destination }) {
 }
 
 function ItineraryView({ itinerary, answers, onBookNow }) {
-  const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -321,30 +320,31 @@ function ItineraryView({ itinerary, answers, onBookNow }) {
         ) : null)}
       </div>
       <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, overflow: "hidden", background: "#fdfbf8", marginBottom: 32 }}>
-        <button onClick={() => setChatOpen(!chatOpen)} style={{ width: "100%", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: chatOpen ? "#1a1a1a" : "transparent", border: "none", cursor: "pointer", transition: "background 0.2s" }}>
-          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, color: chatOpen ? "#fff" : "#1a1a1a" }}>Want to change anything?</span>
-          <span style={{ color: chatOpen ? "#0ea5e9" : "#888", fontSize: 18, transform: chatOpen ? "rotate(180deg)" : "none" }}>⌄</span>
-        </button>
-        {chatOpen && (
-          <div style={{ borderTop: "1px solid #e8e2d9" }}>
-            {chatMessages.length === 0 && <div style={{ padding: "14px 20px" }}><p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#888", margin: 0 }}>Tell me anything you'd like to adjust — hotel, a specific day, activities, pace, budget...</p></div>}
-            {chatMessages.length > 0 && (
-              <div style={{ maxHeight: 260, overflowY: "auto", padding: "14px 20px" }}>
-                {chatMessages.map((m, i) => (
-                  <div key={i} style={{ marginBottom: 12, display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
-                    <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: m.role === "user" ? "#1a1a1a" : "#f0ebe3", color: m.role === "user" ? "#fff" : "#333", fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, lineHeight: 1.5 }}>{m.content}</div>
-                  </div>
-                ))}
-                {chatLoading && <div style={{ display: "flex", gap: 5 }}>{[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#003580", animation: "bounce 1.2s infinite", animationDelay: `${i * 0.2}s` }} />)}</div>}
-                <div ref={chatBottomRef} />
-              </div>
-            )}
-            <div style={{ padding: "12px 16px", borderTop: "1px solid #f0ebe3", display: "flex", gap: 8 }}>
-              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChat()} placeholder="e.g. Replace the museum with something outdoors..." style={{ flex: 1, padding: "10px 14px", border: "1.5px solid #e8e2d9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", color: "#1a1a1a", background: "#fff", outline: "none" }} />
-              <button onClick={sendChat} disabled={!chatInput.trim() || chatLoading} style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: chatInput.trim() && !chatLoading ? "#1a1a1a" : "#e8e2d9", color: chatInput.trim() && !chatLoading ? "#fff" : "#aaa", fontFamily: "'DM Sans', sans-serif", fontSize: 14, cursor: chatInput.trim() ? "pointer" : "not-allowed" }}>→</button>
+        <div style={{ padding: "16px 20px", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 500, color: "#fff" }}>Want to change anything?</span>
+        </div>
+        <div style={{ borderTop: "1px solid #e8e2d9" }}>
+          {chatMessages.length === 0 && (
+            <div style={{ padding: "16px 20px" }}>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, color: "#888", margin: 0 }}>Tell me anything you'd like to adjust — hotel, a specific day, activities, pace, budget...</p>
             </div>
+          )}
+          {chatMessages.length > 0 && (
+            <div style={{ maxHeight: 320, overflowY: "auto", padding: "16px 20px" }}>
+              {chatMessages.map((m, i) => (
+                <div key={i} style={{ marginBottom: 12, display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+                  <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: m.role === "user" ? "#1a1a1a" : "#f0ebe3", color: m.role === "user" ? "#fff" : "#333", fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, lineHeight: 1.5 }}>{m.content}</div>
+                </div>
+              ))}
+              {chatLoading && <div style={{ display: "flex", gap: 5 }}>{[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#003580", animation: "bounce 1.2s infinite", animationDelay: `${i * 0.2}s` }} />)}</div>}
+              <div ref={chatBottomRef} />
+            </div>
+          )}
+          <div style={{ padding: "14px 16px", borderTop: "1px solid #f0ebe3", display: "flex", gap: 8 }}>
+            <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChat()} placeholder="e.g. Replace the museum with something outdoors..." style={{ flex: 1, padding: "12px 16px", border: "1.5px solid #e8e2d9", borderRadius: 10, fontSize: 14, fontFamily: "'DM Sans', sans-serif", color: "#1a1a1a", background: "#fff", outline: "none" }} />
+            <button onClick={sendChat} disabled={!chatInput.trim() || chatLoading} style={{ padding: "12px 18px", borderRadius: 10, border: "none", background: chatInput.trim() && !chatLoading ? "#1a1a1a" : "#e8e2d9", color: chatInput.trim() && !chatLoading ? "#fff" : "#aaa", fontFamily: "'DM Sans', sans-serif", fontSize: 14, cursor: chatInput.trim() ? "pointer" : "not-allowed" }}>→</button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -736,6 +736,7 @@ function AuthModal({ mode, onClose, onAuth }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=DM+Sans:wght@300;400;500&display=swap');`}</style>
       <div style={{ background: "#fff", borderRadius: 20, padding: "40px 36px", width: "100%", maxWidth: 420, position: "relative", boxShadow: "0 24px 64px rgba(0,0,0,0.18)" }} onClick={e => e.stopPropagation()}>
         <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#aaa" }}>✕</button>
         <TripDoneLogo width={130} />
@@ -931,7 +932,7 @@ function DestinationsPage({ onHome, user, onSignIn, onSignUp, onBookings, onSign
           </h1>
           <p style={{ fontSize: 17, color: "#666", maxWidth: 520, margin: "0 auto", lineHeight: 1.8, fontWeight: 300 }}>From hidden gems to bucket-list classics — click any destination to build your perfect itinerary.</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
+        <div className="destinations-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
           {DESTINATIONS_DATA.map((d, i) => (
             <div key={d.name} onClick={onPlan} style={{ borderRadius: 16, overflow: "hidden", position: "relative", height: 320, boxShadow: "0 8px 32px rgba(0,0,0,0.1)", cursor: "pointer", transition: "transform 0.2s, box-shadow 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 16px 48px rgba(0,0,0,0.18)"; }}
@@ -1386,7 +1387,7 @@ function HelpContactForm() {
 }
 
 // ─── Nav Account Dropdown ─────────────────────────────────────────────────────
-function AccountDropdown({ user, onSignIn, onSignUp, onBookings, onSignOut, onPage }) {
+function AccountDropdown({ user, onSignIn, onSignUp, onBookings, onSignOut, onPage, onPlan }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
   useEffect(() => {
@@ -1435,6 +1436,8 @@ function AccountDropdown({ user, onSignIn, onSignUp, onBookings, onSignOut, onPa
       </button>
       {open && (
         <div style={dropdownStyle}>
+          {onPlan && menuItem("Plan my trip →", onPlan)}
+          <div style={{ height: 1, background: "#f0f4ff", margin: "4px 0" }} />
           {menuItem("Sign in", onSignIn)}
           {menuItem("Create account", onSignUp)}
           {menuItem("My Bookings", onBookings)}
@@ -1508,46 +1511,61 @@ export default function RoamHomepage() {
         .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.2fr; gap: 48px; }
         @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr; } }
+        .desktop-plan-btn { display: inline-flex; }
         @media (max-width: 600px) {
-          .hero-buttons { flex-direction: column; align-items: center; }
-          .hero-buttons button { width: 100%; max-width: 320px; }
+          .desktop-plan-btn { display: none !important; }
+          .hero-buttons { flex-direction: column; align-items: stretch; padding: 0 8px; }
+          .hero-buttons button { width: 100%; text-align: center; }
           .audience-grid { grid-template-columns: 1fr !important; }
-          .steps-grid { grid-template-columns: 1fr 1fr !important; }
+          .steps-grid { grid-template-columns: 1fr !important; }
           .example-grid { grid-template-columns: 1fr !important; }
           .how-it-works-step { grid-template-columns: 1fr !important; }
-          .how-it-works-step > div:last-child { order: -1 !important; }
+          .why-cards { grid-template-columns: 1fr !important; }
+          .destinations-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
       {authModal && <AuthModal mode={authModal} onClose={() => setAuthModal(null)} onAuth={u => { setUser(u); setAuthModal(null); }} />}
 
       {/* NAV */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "12px 5vw", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "2px solid rgba(0,53,128,0.1)" }}>
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "12px 5vw", minHeight: 68, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "2px solid rgba(0,53,128,0.1)" }}>
         <div style={{ cursor: "pointer" }} onClick={goHome}><TripDoneLogo width={130} /></div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button onClick={setShowApp} style={{ padding: "10px 26px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,53,128,0.35)" }}>Plan my trip</button>
-          <AccountDropdown {...sharedProps} />
+          <button className="desktop-plan-btn" onClick={setShowApp} style={{ padding: "10px 26px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,53,128,0.35)" }}>Plan my trip</button>
+          <AccountDropdown {...sharedProps} onPlan={setShowApp} />
         </div>
       </nav>
 
-      {/* HERO + TICKER */}
-      <div style={{ minHeight: "100vh", background: "#ffffff", display: "flex", flexDirection: "column", justifyContent: "center", overflow: "hidden", width: "100%" }}>
+      {/* HERO — ticker moved up on mobile */}
+      <div style={{ minHeight: "100vh", background: "#ffffff", display: "flex", flexDirection: "column", overflow: "hidden", width: "100%" }}>
+        {/* Ticker at TOP on mobile so visible immediately */}
+        <div style={{ background: "#003580", padding: "12px 0", overflow: "hidden", marginTop: 68 }} className="mobile-ticker-top">
+          <div style={{ display: "flex", animation: "ticker 12s linear infinite", whiteSpace: "nowrap" }}>
+            {[...PLATFORMS, ...PLATFORMS].map((p, i) => (
+              <span key={i} style={{ fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7ab8e8", padding: "0 16px" }}>{p} <span style={{ color: "#4a90c4", margin: "0 0 0 16px" }}>◆</span></span>
+            ))}
+          </div>
+        </div>
+        <style>{`
+          @media (min-width: 601px) { .mobile-ticker-top { display: none !important; } .desktop-ticker { display: block !important; } }
+          @media (max-width: 600px) { .desktop-ticker { display: none !important; } }
+        `}</style>
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", textAlign: "center", padding: "140px 5vw 60px" }}>
-            <p style={{ fontSize: "clamp(14px, 1.5vw, 18px)", letterSpacing: "0.25em", textTransform: "uppercase", color: "#003580", marginBottom: 20, fontWeight: 600 }}>AI-Powered Travel Agent</p>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(52px, 7vw, 100px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.05, marginBottom: 28 }}>
+          <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", textAlign: "center", padding: "60px 6vw 40px" }}>
+            <p style={{ fontSize: "clamp(11px, 1.5vw, 18px)", letterSpacing: "0.25em", textTransform: "uppercase", color: "#003580", marginBottom: 16, fontWeight: 600 }}>AI-Powered Travel Agent</p>
+            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(44px, 7vw, 100px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.05, marginBottom: 20 }}>
               Your Perfect Trip,<br /><em style={{ color: "#003580" }}>Planned For You.</em>
             </h1>
-            <p style={{ fontSize: "clamp(16px, 1.5vw, 20px)", color: "#666", maxWidth: 560, margin: "0 auto 16px", lineHeight: 1.7, fontWeight: 300 }}>Tell us where you want to go and what you love. We'll handle everything else.</p>
-            <p style={{ fontSize: "clamp(13px, 1.2vw, 15px)", color: "#003580", maxWidth: 560, margin: "0 auto 40px", fontWeight: 500, letterSpacing: "0.05em" }}>All your favourite travel sites — in one place. Free forever.</p>
-            <div className="hero-buttons" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <button onClick={setShowApp} style={{ padding: "16px 40px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 16, fontWeight: 500, cursor: "pointer", boxShadow: "0 8px 32px rgba(0,53,128,0.3)" }}>Plan my trip for free →</button>
-              <button onClick={() => setPage("howItWorks")} style={{ padding: "16px 40px", borderRadius: 6, background: "transparent", border: "1.5px solid #003580", color: "#003580", fontSize: 16, fontWeight: 400, cursor: "pointer" }}>See how it works</button>
+            <p style={{ fontSize: "clamp(15px, 1.5vw, 20px)", color: "#666", maxWidth: 560, margin: "0 auto 12px", lineHeight: 1.7, fontWeight: 300 }}>Tell us where you want to go and what you love. We'll handle everything else.</p>
+            <p style={{ fontSize: "clamp(12px, 1.2vw, 15px)", color: "#003580", maxWidth: 560, margin: "0 auto 32px", fontWeight: 500, letterSpacing: "0.05em" }}>All your favourite travel sites — in one place. Free forever.</p>
+            <div className="hero-buttons" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <button onClick={setShowApp} style={{ padding: "15px 36px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 16, fontWeight: 500, cursor: "pointer", boxShadow: "0 8px 32px rgba(0,53,128,0.3)" }}>Plan My Trip For Free →</button>
+              <button onClick={() => setPage("howItWorks")} style={{ padding: "15px 36px", borderRadius: 6, background: "transparent", border: "1.5px solid #003580", color: "#003580", fontSize: 16, fontWeight: 400, cursor: "pointer" }}>See How It Works</button>
             </div>
           </div>
         </div>
-        {/* TICKER — pinned to bottom of hero */}
-        <div style={{ background: "#003580", padding: "14px 0", overflow: "hidden" }}>
+        {/* Desktop ticker at bottom */}
+        <div className="desktop-ticker" style={{ background: "#003580", padding: "14px 0", overflow: "hidden" }}>
           <div style={{ display: "flex", animation: "ticker 12s linear infinite", whiteSpace: "nowrap" }}>
             {[...PLATFORMS, ...PLATFORMS].map((p, i) => (
               <span key={i} style={{ fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7ab8e8", padding: "0 16px" }}>{p} <span style={{ color: "#4a90c4", margin: "0 0 0 16px" }}>◆</span></span>
@@ -1565,7 +1583,7 @@ export default function RoamHomepage() {
           <p style={{ fontSize: "clamp(15px, 1.4vw, 18px)", color: "#666", lineHeight: 1.8, maxWidth: 680, margin: "0 auto 48px", fontWeight: 300 }}>
             Most people spend more time planning their holiday than enjoying it. TripDone changes that. Our AI builds your entire trip in minutes — every hotel, every day, every booking link — all in one place. No juggling tabs, no wasted hours, no stress.
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, textAlign: "left" }}>
+          <div className="why-cards" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, textAlign: "left" }}>
             {[
               { title: "Saves you time", desc: "A full itinerary in under 2 minutes. What used to take hours of research is done before your coffee goes cold." },
               { title: "Saves you money", desc: "We compare across all major booking platforms so you always get the best price — without the legwork." },
@@ -1612,7 +1630,7 @@ export default function RoamHomepage() {
               From idea to itinerary<br /><em style={{ color: "#7ba4db" }}>in minutes</em>
             </h2>
           </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+          <div className="steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
             {STEPS.map((s, i) => (
               <FadeIn key={s.num} delay={i * 0.12}>
                 <div style={{ padding: "36px 32px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}>
@@ -1647,7 +1665,7 @@ export default function RoamHomepage() {
           </FadeIn>
 
           {/* Day cards — 3 column grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          <div className="example-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
             {EXAMPLE.days.map((day, i) => (
               <FadeIn key={day.range} delay={i * 0.1}>
                 <div style={{ border: "1.5px solid #e0e6f0", borderRadius: 14, padding: "22px 24px", background: "#fff", height: "100%" }}>
