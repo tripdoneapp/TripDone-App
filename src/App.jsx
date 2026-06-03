@@ -176,7 +176,7 @@ async function callClaude(system, userMessage, maxTokens = 1500) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
       system,
       messages: [{ role: "user", content: userMessage }],
@@ -672,7 +672,7 @@ function ScrollQuiz({ answers, setAnswers, onSubmit, error }) {
         <span style={labelStyle}>How do you like to travel?</span>
         <span style={hintStyle}>This shapes how many activities we plan each day</span>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {[{ value: "packed", label: "Packed", sub: "3+ activities per day — full itinerary morning to night", dots: 5 }, { value: "balanced", label: "Balanced", sub: "2 activities per day with free time built in", dots: 4 }, { value: "relaxed", label: "Relaxed", sub: "1–2 activities per day, easy pace", dots: 3 }, { value: "one_per_day", label: "One a Day", sub: "1 activity per day, rest of the day is yours", dots: 2 }, { value: "spontaneous", label: "Spontaneous", sub: "1–2 planned activities for the whole trip", dots: 1 }, { value: "transport", label: "Transport & Accommodation Only", sub: "Flights and hotels only — no activities planned", dots: 0 }].map(opt => {
+          {[{ value: "packed", label: "Packed", sub: "2+ activities per day — full itinerary morning to night", dots: 5 }, { value: "balanced", label: "Balanced", sub: "1–2 activities per day with free time built in", dots: 4 }, { value: "relaxed", label: "Relaxed", sub: "1 activity per day, easy pace", dots: 3 }, { value: "every_few_days", label: "Every Few Days", sub: "1 activity every 2–3 days", dots: 2 }, { value: "spontaneous", label: "Spontaneous", sub: "1–2 planned activities for the whole trip", dots: 1 }, { value: "transport", label: "Transport & Accommodation Only", sub: "Flights and hotels only — no activities planned", dots: 0 }].map(opt => {
             const sel = answers.pace === opt.value;
             return <button key={opt.value} onClick={() => set("pace", opt.value)} style={{ padding: "13px 16px", borderRadius: 10, textAlign: "left", border: `1.5px solid ${sel ? "#003580" : "#e0e6f0"}`, background: sel ? "#eef3ff" : "#fafbff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, color: sel ? "#003580" : "#1a1a1a" }}>{opt.label} <span style={{ fontWeight: 300, color: sel ? "#003580" : "#888" }}>— {opt.sub}</span></div>
