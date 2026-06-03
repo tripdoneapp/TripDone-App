@@ -91,11 +91,11 @@ function PlaneOutline({ color = "#0ea5e9", size = 28 }) {
 }
 
 function TripDoneLogo() {
-  return <img src="/tripdone-logo.png" alt="TripDone" style={{ height: 44, width: "auto", flexShrink: 0 }}/>;
+  return <img src="/logo.png" alt="TripDone" style={{ height: 44, width: "auto", flexShrink: 0 }}/>;
 }
 
 function TripDoneLogoDark() {
-  return <img src="/tripdone-logo.png" alt="TripDone" style={{ height: 44, width: "auto", flexShrink: 0, filter: "brightness(0) invert(1)" }}/>;
+  return <img src="/logo.png" alt="TripDone" style={{ height: 44, width: "auto", flexShrink: 0, filter: "brightness(0) invert(1)" }}/>;
 }
 
 function useInView(ref) {
