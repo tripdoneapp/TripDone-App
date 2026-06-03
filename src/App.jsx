@@ -91,27 +91,11 @@ function PlaneOutline({ color = "#0ea5e9", size = 28 }) {
 }
 
 function TripDoneLogo() {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1, width: 130, flexShrink: 0 }}>
-      <svg width={143} height={23} viewBox="0 0 260 32" fill="none" style={{ display: "block", marginBottom: -11 }}>
-        <path d="M 50 16 C 100 8 160 10 218 20" stroke="#0ea5e9" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55" strokeDasharray="5 4"/>
-        <g transform="translate(218,20) rotate(107.6)"><PlaneOutline color="#0ea5e9" size={20}/></g>
-      </svg>
-      <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: 29, lineHeight: 1, background: "linear-gradient(135deg, #003580 0%, #0ea5e9 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "-1px", whiteSpace: "nowrap" }}>TripDone</span>
-    </div>
-  );
+  return <img src="/tripdone-logo.png" alt="TripDone" style={{ height: 44, width: "auto", flexShrink: 0 }}/>;
 }
 
 function TripDoneLogoDark() {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1, width: 130, flexShrink: 0 }}>
-      <svg width={143} height={23} viewBox="0 0 260 32" fill="none" style={{ display: "block", marginBottom: -11 }}>
-        <path d="M 50 16 C 100 8 160 10 218 20" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55" strokeDasharray="5 4"/>
-        <g transform="translate(218,20) rotate(107.6)"><PlaneOutline color="white" size={20}/></g>
-      </svg>
-      <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: 29, color: "#fff", lineHeight: 1, letterSpacing: "-1px", whiteSpace: "nowrap" }}>TripDone</span>
-    </div>
-  );
+  return <img src="/tripdone-logo.png" alt="TripDone" style={{ height: 44, width: "auto", flexShrink: 0, filter: "brightness(0) invert(1)" }}/>;
 }
 
 function useInView(ref) {
@@ -1873,7 +1857,6 @@ export default function RoamHomepage() {
           .footer-grid { grid-template-columns: 1fr; }
           .nav-plan-btn { display: none !important; }
           .nav-home-btn { display: none !important; }
-          .hero-h1 { white-space: normal !important; font-size: clamp(28px, 8vw, 48px) !important; }
           .audience-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .audience-grid .audience-card { height: 140px !important; border-radius: 12px !important; }
           .steps-grid { grid-template-columns: 1fr; gap: 12px; }
@@ -1897,9 +1880,9 @@ export default function RoamHomepage() {
       {/* HERO */}
       <div style={{ minHeight: "100vh", background: "#ffffff", display: "flex", flexDirection: "column", overflow: "hidden", width: "100%" }}>
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", textAlign: "center", padding: "100px 6vw 20px" }}>
+          <div style={{ width: "100%", maxWidth: 1100, margin: "0 auto", textAlign: "center", padding: "100px 4vw 20px" }}>
             <p style={{ fontSize: "clamp(14px, 1.8vw, 22px)", letterSpacing: "0.25em", textTransform: "uppercase", color: "#003580", marginBottom: 16, fontWeight: 600 }}>AI-Powered Travel Agent</p>
-            <h1 className="hero-h1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(34px, 4.5vw, 68px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.15, marginBottom: 24, whiteSpace: "nowrap" }}>Your Perfect Trip, <span style={{ color: "#003580", fontWeight: 600 }}>Planned For You.</span></h1>
+            <h1 className="hero-h1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(34px, 4.5vw, 68px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.15, marginBottom: 24 }}>Your Perfect Trip,<br/><span style={{ color: "#003580", fontWeight: 600 }}>Planned For You.</span></h1>
             <p style={{ fontSize: "clamp(17px, 1.6vw, 22px)", color: "#666", maxWidth: 600, margin: "0 auto 14px", lineHeight: 1.7, fontWeight: 300 }}>Tell us where you want to go and what you love. We'll handle everything else.</p>
             <p style={{ fontSize: "clamp(15px, 1.4vw, 18px)", color: "#003580", maxWidth: 580, margin: "0 auto 36px", fontWeight: 600, letterSpacing: "0.03em" }}>All your favourite travel sites — in one place. Free forever.</p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
