@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');`;
+const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=DM+Sans:wght@300;400;500&display=swap');`;
 
 const AUDIENCE_DATA = [
   { label: "Business Travel", desc: "Seamless trips that keep you productive and comfortable — every time.", photo: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=80" },
@@ -158,15 +158,28 @@ Return ONLY valid JSON, no markdown, no explanation. Format:
   "destination": "string",
   "tagline": "short evocative description (max 10 words)",
   "duration": "e.g. 7 days",
-  "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £280/night" },
+  "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £75/night" },
   "alternatives": {
-    "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £80/night", "note": "1 sentence" },
-    "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £450/night", "note": "1 sentence" }
+    "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £18/night", "note": "1 sentence" },
+    "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £220/night", "note": "1 sentence" }
   },
   "days": [{ "day": 1, "theme": "string", "morning": "string", "afternoon": "string", "evening": "string", "transport": "string", "insiderTip": "string" }],
   "practicalInfo": { "bestTransport": "string", "mustBook": "string", "packingTip": "string" },
-  "packingList": { "essentials": ["item1","item2"], "clothing": ["item1","item2"], "extras": ["item1","item2"] }
+  "packingList": { "essentials": ["item1","item2"], "clothing": ["item1","item2"], "extras": ["item1","item2"] },
+  "helpfulLinks": [
+    { "title": "string", "desc": "1 short sentence describing what the article covers", "url": "https://...", "source": "e.g. Lonely Planet" }
+  ]
 }
+HOTEL TIER RULES — follow these exactly:
+- "hotel" (recommended): A real, highly-rated hotel or guesthouse with excellent reviews, priced £50-£100/night. Specific real name required.
+- "alternatives.budget": A real hostel — the best-reviewed hostel in that destination on booking platforms like Hostelworld or Booking.com. Must be a hostel, not a hotel. Priced under £30/night (dorm) or £50/night (private). Specific real name required.
+- "alternatives.luxury": A real 5-star hotel or luxury resort, £150+/night. Specific real name required.
+HELPFUL LINKS RULES — follow these exactly:
+- Include 5-7 links total.
+- Only editorial articles, travel guides, and informational content — NO booking sites, NO Airbnb, NO Skyscanner, NO hotel booking platforms.
+- Good sources: Lonely Planet, Culture Trip, Time Out, BBC Travel, National Geographic Travel, The Guardian Travel, Timeout, Condé Nast Traveller, local tourism board sites, Wikipedia for context.
+- Mix of categories: things to do, food & drink guides, culture/history, practical travel tips, neighbourhood guides.
+- Use real URLs that are likely to exist (e.g. lonelyplanet.com/japan/tokyo, timeout.com/tokyo).
 Generate 4-7 days. Be specific with real place names. Make it feel curated, not generic.`;
 
 const REFINE_SYSTEM = `You are TripDone, a premium AI travel concierge. The user has an existing itinerary and wants to refine it. Respond conversationally and concisely — confirm what you've changed and why it's a great call. Keep responses under 3 sentences. Be warm, confident, and specific.`;
@@ -275,7 +288,7 @@ function LoadingScreen({ destination }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 0" }}>
       <div style={{ fontSize: 40, marginBottom: 24, animation: "spin 3s linear infinite", display: "inline-block" }}>◎</div>
-      <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 400, color: "#1a1a1a", marginBottom: 12 }}>Building your trip</h2>
+      <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 24, fontWeight: 400, color: "#1a1a1a", marginBottom: 12 }}>Building your trip</h2>
       <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "#003580", minHeight: 20 }}>{steps[stepIdx]}</p>
       <div style={{ marginTop: 32, display: "flex", gap: 6, justifyContent: "center" }}>
         {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#003580", animation: "bounce 1.2s infinite", animationDelay: `${i * 0.2}s` }}/>)}
@@ -294,7 +307,7 @@ function DayCard({ day, index }) {
           <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#003580", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, flexShrink: 0 }}>{day.day}</div>
           <div>
             <div style={{ fontSize: 14, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: "#1a1a1a" }}>Day {day.day}</div>
-            <div style={{ fontSize: 13, fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", color: "#888" }}>{day.theme}</div>
+            <div style={{ fontSize: 13, fontFamily: "'DM Sans', sans-serif", color: "#888" }}>{day.theme}</div>
           </div>
         </div>
         <span style={{ color: "#003580", fontSize: 18, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>⌄</span>
@@ -321,24 +334,44 @@ function DayCard({ day, index }) {
 // ─── Hotel Tier Toggle (NEW) ──────────────────────────────────────────────────
 function HotelTierToggle({ itinerary }) {
   const [tier, setTier] = useState("recommended");
+  const [night, setNight] = useState(1);
   const tiers = { budget: itinerary.alternatives?.budget, recommended: itinerary.hotel, luxury: itinerary.alternatives?.luxury };
   const current = tiers[tier];
+  const totalNights = itinerary.days ? itinerary.days.length : 7;
   if (!current) return null;
+
+  // Night display — same hotel throughout but shows which night you're viewing
+  const nightLabel = night === 1 ? "Check-in night" : night === totalNights ? "Last night" : `Night ${night}`;
+
   return (
     <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, padding: "18px 20px", marginBottom: 16, background: "#fdfbf8" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+      {/* Header row */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
         <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif" }}>🏨 Accommodation</div>
         <div style={{ display: "flex", gap: 4 }}>
           {["budget", "recommended", "luxury"].map(t => (
-            tiers[t] && <button key={t} onClick={() => setTier(t)} style={{ padding: "5px 12px", borderRadius: 20, border: `1.5px solid ${tier === t ? "#003580" : "#e0e6f0"}`, background: tier === t ? "#003580" : "transparent", color: tier === t ? "#fff" : "#888", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: tier === t ? 500 : 400, textTransform: "capitalize" }}>{t}</button>
+            tiers[t] && <button key={t} onClick={() => setTier(t)} style={{ padding: "5px 12px", borderRadius: 20, border: `1.5px solid ${tier === t ? "#003580" : "#e0e6f0"}`, background: tier === t ? "#003580" : "transparent", color: tier === t ? "#fff" : "#888", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: tier === t ? 500 : 400 }}>
+              {t === "budget" ? "Hostel" : t === "recommended" ? "Recommended" : "Luxury"}
+            </button>
           ))}
         </div>
       </div>
+
+      {/* Night selector */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginRight: 4 }}>Night:</span>
+        {Array.from({ length: totalNights }, (_, i) => i + 1).map(n => (
+          <button key={n} onClick={() => setNight(n)} style={{ width: 30, height: 30, borderRadius: 8, border: `1.5px solid ${night === n ? "#003580" : "#e0e6f0"}`, background: night === n ? "#003580" : "transparent", color: night === n ? "#fff" : "#888", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: night === n ? 600 : 400, flexShrink: 0 }}>{n}</button>
+        ))}
+      </div>
+
+      {/* Hotel info */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: "#1a1a1a", marginBottom: 3 }}>{current.name || current.hotel}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 17, color: "#1a1a1a", marginBottom: 3 }}>{current.name || current.hotel}</div>
           <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: "#888", marginBottom: 6 }}>{current.area}</div>
           <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, color: "#555", lineHeight: 1.5 }}>{current.description || current.note}</div>
+          <div style={{ marginTop: 8, fontSize: 11.5, color: "#003580", fontFamily: "'DM Sans', sans-serif" }}>✓ {nightLabel}</div>
         </div>
         <div style={{ background: "#eef3ff", borderRadius: 8, padding: "6px 12px", fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#003580", fontWeight: 500, whiteSpace: "nowrap", marginLeft: 12, flexShrink: 0 }}>{current.priceRange}</div>
       </div>
@@ -379,59 +412,381 @@ function ShareItinerary({ itinerary }) {
   );
 }
 
-// ─── PDF Export (NEW) ─────────────────────────────────────────────────────────
+// ─── PDF Export ───────────────────────────────────────────────────────────────
 function PDFExport({ itinerary }) {
   const [exporting, setExporting] = useState(false);
-  const handleExport = () => {
+
+  const loadJsPDF = () => new Promise((resolve, reject) => {
+    if (window.jspdf) { resolve(window.jspdf.jsPDF); return; }
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload = () => resolve(window.jspdf.jsPDF);
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+
+  const handleExport = async () => {
     setExporting(true);
-    const content = [
-      `TRIPDONE — YOUR ITINERARY\n${"═".repeat(50)}`,
-      `${itinerary.destination.toUpperCase()}`,
-      `${itinerary.tagline}`,
-      `Duration: ${itinerary.duration}`,
-      ``,
-      `RECOMMENDED STAY`,
-      `${itinerary.hotel?.name} · ${itinerary.hotel?.area}`,
-      `${itinerary.hotel?.priceRange} · ${itinerary.hotel?.description}`,
-      ``,
-      `${"─".repeat(50)}`,
-      `DAY BY DAY`,
-      `${"─".repeat(50)}`,
-      ...(itinerary.days || []).flatMap(d => [
-        ``,
-        `DAY ${d.day} — ${d.theme.toUpperCase()}`,
-        `☀  Morning:   ${d.morning}`,
-        `⛅  Afternoon: ${d.afternoon}`,
-        `🌙  Evening:   ${d.evening}`,
-        `🚌  Transport: ${d.transport}`,
-        `✦  Tip: ${d.insiderTip}`,
-      ]),
-      ``,
-      `${"─".repeat(50)}`,
-      `PRACTICAL INFO`,
-      `${"─".repeat(50)}`,
-      `Getting around: ${itinerary.practicalInfo?.bestTransport}`,
-      `Must book ahead: ${itinerary.practicalInfo?.mustBook}`,
-      `Packing tip: ${itinerary.practicalInfo?.packingTip}`,
-      ``,
-      `PACKING LIST`,
-      `Essentials: ${(itinerary.packingList?.essentials || []).join(", ")}`,
-      `Clothing: ${(itinerary.packingList?.clothing || []).join(", ")}`,
-      `Extras: ${(itinerary.packingList?.extras || []).join(", ")}`,
-      ``,
-      `${"═".repeat(50)}`,
-      `Generated by TripDone · tripdone.travel`,
-    ].join("\n");
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `TripDone_${itinerary.destination.replace(/[^a-z0-9]/gi, "_")}.txt`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    try {
+      const jsPDF = await loadJsPDF();
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const W = 210, H = 297;
+      const navy = [0, 53, 128], sky = [14, 165, 233], white = [255,255,255], offwhite = [248,249,255], darkgrey = [80,80,80], lightgrey = [220,226,240], midgrey = [140,140,140];
+
+      const safeText = (str) => (str || "").replace(/[^\x20-\x7E]/g, "").trim();
+
+      const addPageFooter = (pageNum, totalPages) => {
+        doc.setFillColor(...navy);
+        doc.rect(0, H - 14, W, 14, "F");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(...white);
+        doc.text("tripdone.travel", 14, H - 5.5);
+        doc.text(`Page ${pageNum} of ${totalPages}`, W/2, H - 5.5, { align: "center" });
+        doc.text("Your trip. Done.", W - 14, H - 5.5, { align: "right" });
+      };
+
+      const wrapText = (doc, text, x, y, maxWidth, lineHeight) => {
+        const lines = doc.splitTextToSize(safeText(text), maxWidth);
+        lines.forEach((line, i) => doc.text(line, x, y + i * lineHeight));
+        return y + lines.length * lineHeight;
+      };
+
+      const totalPages = 2 + (itinerary.days || []).length + 1; // cover + contents + days + packing
+      let pageNum = 1;
+
+      // ── PAGE 1: COVER ──────────────────────────────────────────────────────
+      doc.setFillColor(...navy);
+      doc.rect(0, 0, W, H, "F");
+
+      // Top accent line
+      doc.setFillColor(...sky);
+      doc.rect(0, 0, W, 3, "F");
+
+      // TripDone wordmark
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(28);
+      doc.setTextColor(...white);
+      doc.text("TripDone", 14, 28);
+
+      // Tagline under wordmark
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...sky);
+      doc.text("AI-POWERED TRAVEL PLANNING", 14, 36);
+
+      // Divider
+      doc.setDrawColor(...sky);
+      doc.setLineWidth(0.5);
+      doc.line(14, 44, W - 14, 44);
+
+      // Destination
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(38);
+      doc.setTextColor(...white);
+      const destLines = doc.splitTextToSize(safeText(itinerary.destination), W - 28);
+      destLines.forEach((line, i) => doc.text(line, 14, 70 + i * 14));
+
+      // Tagline
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(14);
+      doc.setTextColor(180, 200, 230);
+      doc.text(safeText(itinerary.tagline), 14, 70 + destLines.length * 14 + 10);
+
+      // Info pills
+      const pillY = 130;
+      const pills = [
+        { label: "DURATION", value: safeText(itinerary.duration) },
+        { label: "STAY", value: safeText(itinerary.hotel?.name || "") },
+        { label: "FROM", value: safeText(itinerary.hotel?.priceRange || "") },
+      ];
+      pills.forEach((pill, i) => {
+        const px = 14 + i * 62;
+        doc.setFillColor(255,255,255,30);
+        doc.setFillColor(20, 60, 120);
+        doc.roundedRect(px, pillY, 58, 24, 3, 3, "F");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(...sky);
+        doc.text(pill.label, px + 6, pillY + 8);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...white);
+        const valLines = doc.splitTextToSize(pill.value, 46);
+        doc.text(valLines[0], px + 6, pillY + 16);
+      });
+
+      // Bottom branding strip
+      doc.setFillColor(0, 35, 90);
+      doc.rect(0, H - 50, W, 36, "F");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(180, 200, 230);
+      doc.text("Your itinerary, planned by AI.", 14, H - 34);
+      doc.setFontSize(8);
+      doc.text("Free to use. Always. tripdone.travel", 14, H - 25);
+
+      addPageFooter(pageNum++, totalPages);
+
+      // ── PAGE 2: CONTENTS ───────────────────────────────────────────────────
+      doc.addPage();
+      doc.setFillColor(...offwhite);
+      doc.rect(0, 0, W, H, "F");
+
+      // Header bar
+      doc.setFillColor(...navy);
+      doc.rect(0, 0, W, 22, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(...white);
+      doc.text("TripDone", 14, 14);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...sky);
+      doc.text(safeText(itinerary.destination).toUpperCase(), W - 14, 14, { align: "right" });
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(...navy);
+      doc.text("Contents", 14, 44);
+
+      doc.setDrawColor(...lightgrey);
+      doc.setLineWidth(0.4);
+      doc.line(14, 48, W - 14, 48);
+
+      const contents = [
+        { title: "Your Itinerary Overview", page: 3 },
+        ...(itinerary.days || []).map((d, i) => ({ title: `Day ${d.day}  —  ${safeText(d.theme)}`, page: 3 + i })),
+        { title: "Packing List", page: 3 + (itinerary.days || []).length },
+      ];
+
+      let cy = 62;
+      contents.forEach((item, i) => {
+        const isDay = i > 0 && i <= (itinerary.days || []).length;
+        doc.setFillColor(isDay ? 240 : 230, isDay ? 244 : 237, isDay ? 255 : 255);
+        doc.roundedRect(14, cy - 6, W - 28, 11, 2, 2, "F");
+        doc.setFont("helvetica", isDay ? "normal" : "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(...navy);
+        doc.text(item.title, 20, cy + 1);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(...midgrey);
+        doc.text(`${item.page}`, W - 20, cy + 1, { align: "right" });
+        // dotted line
+        doc.setDrawColor(...lightgrey);
+        doc.setLineDashPattern([1, 2], 0);
+        doc.line(20 + doc.getTextWidth(item.title) + 4, cy + 1, W - 24, cy + 1);
+        doc.setLineDashPattern([], 0);
+        cy += 14;
+      });
+
+      // Hotel highlight box
+      if (itinerary.hotel) {
+        cy += 8;
+        doc.setFillColor(...navy);
+        doc.roundedRect(14, cy, W - 28, 36, 4, 4, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...sky);
+        doc.text("RECOMMENDED STAY", 22, cy + 10);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.setTextColor(...white);
+        doc.text(safeText(itinerary.hotel.name), 22, cy + 20);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(180, 200, 230);
+        doc.text(`${safeText(itinerary.hotel.area)}  •  ${safeText(itinerary.hotel.priceRange)}`, 22, cy + 28);
+      }
+
+      addPageFooter(pageNum++, totalPages);
+
+      // ── PAGES 3+: ONE PAGE PER DAY ─────────────────────────────────────────
+      for (const day of (itinerary.days || [])) {
+        doc.addPage();
+        doc.setFillColor(...white);
+        doc.rect(0, 0, W, H, "F");
+
+        // Header bar
+        doc.setFillColor(...navy);
+        doc.rect(0, 0, W, 22, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(...white);
+        doc.text("TripDone", 14, 14);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(...sky);
+        doc.text(safeText(itinerary.destination).toUpperCase(), W - 14, 14, { align: "right" });
+
+        // Day number badge
+        doc.setFillColor(...sky);
+        doc.roundedRect(14, 28, 22, 10, 2, 2, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...white);
+        doc.text(`DAY ${day.day}`, 25, 35, { align: "center" });
+
+        // Theme
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.setTextColor(...navy);
+        doc.text(safeText(day.theme), 42, 36);
+
+        doc.setDrawColor(...lightgrey);
+        doc.setLineWidth(0.4);
+        doc.line(14, 44, W - 14, 44);
+
+        let dy = 56;
+        const sections = [
+          { label: "MORNING", icon: "Morning", value: day.morning },
+          { label: "AFTERNOON", icon: "Afternoon", value: day.afternoon },
+          { label: "EVENING", icon: "Evening", value: day.evening },
+          { label: "GETTING AROUND", icon: "Transport", value: day.transport },
+        ].filter(s => s.value);
+
+        sections.forEach(section => {
+          // Section label
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(...sky);
+          doc.text(section.label, 14, dy);
+          dy += 5;
+
+          // Content box
+          const lines = doc.splitTextToSize(safeText(section.value), W - 36);
+          const boxH = lines.length * 5.5 + 8;
+          doc.setFillColor(...offwhite);
+          doc.roundedRect(14, dy, W - 28, boxH, 2, 2, "F");
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9.5);
+          doc.setTextColor(...darkgrey);
+          lines.forEach((line, i) => doc.text(line, 20, dy + 7 + i * 5.5));
+          dy += boxH + 8;
+        });
+
+        // Insider tip
+        if (day.insiderTip) {
+          doc.setFillColor(238, 243, 255);
+          const tipLines = doc.splitTextToSize(safeText(day.insiderTip), W - 46);
+          const tipH = tipLines.length * 5.5 + 12;
+          doc.roundedRect(14, dy, W - 28, tipH, 2, 2, "F");
+          doc.setFillColor(...navy);
+          doc.rect(14, dy, 3, tipH, "F");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(...navy);
+          doc.text("INSIDER TIP", 22, dy + 8);
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(9);
+          doc.setTextColor(...navy);
+          tipLines.forEach((line, i) => doc.text(line, 22, dy + 14 + i * 5.5));
+        }
+
+        addPageFooter(pageNum++, totalPages);
+      }
+
+      // ── LAST PAGE: PACKING LIST ────────────────────────────────────────────
+      doc.addPage();
+      doc.setFillColor(...offwhite);
+      doc.rect(0, 0, W, H, "F");
+
+      doc.setFillColor(...navy);
+      doc.rect(0, 0, W, 22, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(...white);
+      doc.text("TripDone", 14, 14);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...sky);
+      doc.text(safeText(itinerary.destination).toUpperCase(), W - 14, 14, { align: "right" });
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(...navy);
+      doc.text("Packing List", 14, 44);
+      doc.setDrawColor(...lightgrey);
+      doc.setLineWidth(0.4);
+      doc.line(14, 48, W - 14, 48);
+
+      const packingCols = [
+        { title: "Essentials", items: itinerary.packingList?.essentials || [], x: 14 },
+        { title: "Clothing", items: itinerary.packingList?.clothing || [], x: 80 },
+        { title: "Extras", items: itinerary.packingList?.extras || [], x: 146 },
+      ];
+
+      packingCols.forEach(col => {
+        let py = 62;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...sky);
+        doc.text(col.title.toUpperCase(), col.x, py);
+        py += 8;
+        col.items.forEach(item => {
+          doc.setFillColor(...lightgrey);
+          doc.roundedRect(col.x, py - 4, 5, 5, 1, 1, "F");
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(...darkgrey);
+          doc.text(safeText(item), col.x + 8, py);
+          py += 9;
+        });
+      });
+
+      // Practical info
+      if (itinerary.practicalInfo) {
+        const piY = 200;
+        doc.setFillColor(...navy);
+        doc.roundedRect(14, piY, W - 28, 54, 4, 4, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...sky);
+        doc.text("PRACTICAL NOTES", 22, piY + 12);
+        const piItems = [
+          { label: "Getting around", value: itinerary.practicalInfo.bestTransport },
+          { label: "Pre-book", value: itinerary.practicalInfo.mustBook },
+          { label: "Packing tip", value: itinerary.practicalInfo.packingTip },
+        ].filter(i => i.value);
+        piItems.forEach((item, i) => {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8);
+          doc.setTextColor(180, 200, 230);
+          doc.text(`${item.label}:`, 22, piY + 22 + i * 12);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(...white);
+          const shortened = doc.splitTextToSize(safeText(item.value), W - 90);
+          doc.text(shortened[0], 60, piY + 22 + i * 12);
+        });
+      }
+
+      // Back cover brand strip
+      doc.setFillColor(...navy);
+      doc.rect(0, H - 36, W, 22, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(...white);
+      doc.text("TripDone", 14, H - 22);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...sky);
+      doc.text("Plan your next trip free at tripdone.travel", W - 14, H - 22, { align: "right" });
+
+      addPageFooter(pageNum++, totalPages);
+
+      // Save
+      doc.save(`TripDone_${safeText(itinerary.destination).replace(/\s+/g, "_")}.pdf`);
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      alert("PDF export failed. Please try again.");
+    }
     setExporting(false);
   };
+
   return (
-    <button onClick={handleExport} disabled={exporting} style={{ padding: "10px 20px", borderRadius: 8, border: "1.5px solid #e8e2d9", background: "#fff", color: "#555", fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontWeight: 500 }}>
-      {exporting ? "Exporting..." : "⬇ Download itinerary"}
+    <button onClick={handleExport} disabled={exporting} style={{ padding: "10px 20px", borderRadius: 8, border: "1.5px solid #e8e2d9", background: "#fff", color: exporting ? "#aaa" : "#555", fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", cursor: exporting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8, fontWeight: 500, transition: "all 0.2s" }}>
+      {exporting ? "⏳ Generating PDF..." : "⬇ Download PDF"}
     </button>
   );
 }
@@ -493,8 +848,8 @@ function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
       <div style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #2d2418 100%)", borderRadius: 16, padding: "28px 24px", marginBottom: 20, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120, borderRadius: "50%", background: "rgba(0,53,128,0.15)" }}/>
         <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "#0ea5e9", textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>Your TripDone itinerary</div>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: "#fff", fontWeight: 400, margin: "0 0 6px" }}>{itinerary.destination}</h1>
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", color: "#0ea5e9", fontSize: 15, margin: "0 0 20px" }}>{itinerary.tagline}</p>
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, color: "#fff", fontWeight: 400, margin: "0 0 6px" }}>{itinerary.destination}</h1>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", color: "#0ea5e9", fontSize: 15, margin: "0 0 20px" }}>{itinerary.tagline}</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {onBookNow && <button onClick={onBookNow} style={{ padding: "11px 28px", borderRadius: 8, background: "#0ea5e9", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Book this trip →</button>}
           <button onClick={handleSave} style={{ padding: "11px 20px", borderRadius: 8, background: saveState === "saved" ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.1)", border: `1.5px solid ${saveState === "saved" ? "#0ea5e9" : "rgba(255,255,255,0.2)"}`, color: saveState === "saved" ? "#0ea5e9" : "rgba(255,255,255,0.7)", fontSize: 13.5, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
@@ -519,14 +874,14 @@ function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
       {itinerary.packingList && (
         <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, padding: "18px 20px", marginBottom: 16, background: "#fdfbf8" }}>
           <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 14 }}>🎒 Packing list</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          <div className="packing-grid">
             {[{ title: "Essentials", items: itinerary.packingList.essentials }, { title: "Clothing", items: itinerary.packingList.clothing }, { title: "Extras", items: itinerary.packingList.extras }].map(cat => (
-              <div key={cat.title}>
-                <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", marginBottom: 8, fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>{cat.title}</div>
+              <div key={cat.title} style={{ background: "#f8f9ff", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", marginBottom: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 600, textAlign: "left" }}>{cat.title}</div>
                 {(cat.items || []).map(item => (
-                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
-                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#003580", flexShrink: 0 }}/>
-                    <span style={{ fontSize: 13, color: "#444", fontFamily: "'DM Sans', sans-serif" }}>{item}</span>
+                  <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 7, textAlign: "left" }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#003580", flexShrink: 0, marginTop: 5 }}/>
+                    <span style={{ fontSize: 13, color: "#444", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4 }}>{item}</span>
                   </div>
                 ))}
               </div>
@@ -569,6 +924,28 @@ function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
           </div>
         </div>
       </div>
+
+      {/* Helpful Links */}
+      {itinerary.helpfulLinks && itinerary.helpfulLinks.length > 0 && (
+        <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, padding: "20px 22px", marginBottom: 32, background: "#fdfbf8" }}>
+          <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 16 }}>🔗 Helpful links</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {itinerary.helpfulLinks.map((link, i) => (
+              <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", alignItems: "flex-start", gap: 14, padding: "12px 14px", borderRadius: 10, border: "1.5px solid #e8e2d9", background: "#fff", transition: "border-color 0.15s, box-shadow 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#003580"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,53,128,0.08)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#e8e2d9"; e.currentTarget.style.boxShadow = "none"; }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#eef3ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>📖</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, color: "#1a1a1a", marginBottom: 3, lineHeight: 1.3 }}>{link.title}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: "#888", lineHeight: 1.4, marginBottom: 4 }}>{link.desc}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#003580", fontWeight: 500, letterSpacing: "0.04em" }}>{link.source}</div>
+                </div>
+                <div style={{ fontSize: 16, color: "#ccc", flexShrink: 0, alignSelf: "center" }}>→</div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -578,12 +955,12 @@ function ScrollQuiz({ answers, setAnswers, onSubmit, error }) {
   const set = (id, val) => setAnswers(prev => ({ ...prev, [id]: val }));
   const isComplete = !!(answers.destination && answers.tripType && answers.dates?.start && answers.dates?.end && Object.values(answers.travellers || {}).reduce((a,b) => a+b, 0) >= 1 && answers.budget?.max > answers.budget?.min && answers.pace && (answers.interests || []).length > 0);
   const sectionStyle = { background: "#fff", borderRadius: 16, padding: "28px 24px", marginBottom: 16, border: "1.5px solid #e8edf5", boxShadow: "0 2px 12px rgba(0,53,128,0.06)" };
-  const labelStyle = { fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 400, color: "#1a1a1a", marginBottom: 4, display: "block" };
+  const labelStyle = { fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 400, color: "#1a1a1a", marginBottom: 4, display: "block" };
   const hintStyle = { fontSize: 13, color: "#999", marginBottom: 16, display: "block", fontFamily: "'DM Sans', sans-serif" };
   return (
     <div>
       <div style={{ textAlign: "center", marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 6 }}>Plan your trip</h1>
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 6 }}>Plan your trip</h1>
         <p style={{ fontSize: 14, color: "#888", lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>Fill in the details below and we'll build your perfect itinerary.</p>
       </div>
       {error && <div style={{ background: "#fef0f0", border: "1px solid #f5c6c6", borderRadius: 8, padding: "12px 16px", marginBottom: 16, fontSize: 13, color: "#c0392b" }}>{error}</div>}
@@ -732,7 +1109,7 @@ function RoamApp({ onItineraryReady, onBookNow }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8f9ff", fontFamily: "'DM Sans', sans-serif", width: "100%" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap'); @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}} @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}} @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}} *{box-sizing:border-box;margin:0;padding:0;} html,body{background:#f8f9ff;width:100%;} input,button,textarea{font-family:inherit;} ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px;}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=DM+Sans:wght@300;400;500&display=swap'); @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}} @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}} @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}} *{box-sizing:border-box;margin:0;padding:0;} html,body{background:#f8f9ff;width:100%;} input,button,textarea{font-family:inherit;} ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px;} .packing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;} @media(max-width:600px){.packing-grid{grid-template-columns:1fr;gap:12px;}}`}</style>
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "32px 24px 60px" }}>
         {screen === "itinerary" && trips.length > 0 && (
           <TripTabs trips={trips} activeId={activeTrip} onSelect={loadTrip} onNew={() => { setActiveTrip(null); setItinerary(null); setAnswers({}); setScreen("quiz"); }} onRemove={remove}/>
@@ -767,7 +1144,7 @@ function AuthModal({ mode, onClose, onAuth }) {
         <TripDoneLogo/>
         {view === "signin" ? (
           <>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 400, color: "#1a1a1a", margin: "18px 0 4px" }}>Welcome back</h2>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 26, fontWeight: 400, color: "#1a1a1a", margin: "18px 0 4px" }}>Welcome back</h2>
             <p style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>Sign in to access your bookings and itineraries.</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <input placeholder="Email address" type="email" value={form.email} onChange={e => f("email", e.target.value)} style={inputStyle}/>
@@ -777,7 +1154,7 @@ function AuthModal({ mode, onClose, onAuth }) {
           </>
         ) : step === 1 ? (
           <>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 400, color: "#1a1a1a", margin: "18px 0 4px" }}>Create your account</h2>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 26, fontWeight: 400, color: "#1a1a1a", margin: "18px 0 4px" }}>Create your account</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <input placeholder="Full name" value={form.name} onChange={e => f("name", e.target.value)} style={inputStyle}/>
               <input placeholder="Email address" type="email" value={form.email} onChange={e => f("email", e.target.value)} style={inputStyle}/>
@@ -787,7 +1164,7 @@ function AuthModal({ mode, onClose, onAuth }) {
           </>
         ) : (
           <>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 400, color: "#1a1a1a", margin: "18px 0 4px" }}>A few more details</h2>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 26, fontWeight: 400, color: "#1a1a1a", margin: "18px 0 4px" }}>A few more details</h2>
             <div style={{ background: "#eef3ff", borderRadius: 8, padding: "8px 12px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ color: "#003580", fontSize: 14 }}>⚡</span>
               <span style={{ fontSize: 12, color: "#003580" }}>These details speed up checkout across all booking platforms.</span>
@@ -890,14 +1267,14 @@ function MyBookings({ user, onClose }) {
         <div style={{ padding: "24px 0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e8edf5", marginBottom: 32 }}>
           <TripDoneLogo/><button onClick={onClose} style={{ padding: "9px 22px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 500, cursor: "pointer" }}>← Back</button>
         </div>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 36, fontWeight: 300, color: "#1a1a1a", marginBottom: 4 }}>My Bookings</h1>
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 36, fontWeight: 300, color: "#1a1a1a", marginBottom: 4 }}>My Bookings</h1>
         <p style={{ fontSize: 14, color: "#888", marginBottom: 32 }}>Welcome back, {user.name}.</p>
         <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
           {tabs.map(t => <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: "10px 22px", borderRadius: 8, border: `1.5px solid ${tab === t.key ? "#003580" : "#e0e6f0"}`, background: tab === t.key ? "#003580" : "#fff", color: tab === t.key ? "#fff" : "#555", fontSize: 14, cursor: "pointer" }}>{t.label}</button>)}
         </div>
         <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #e8edf5", padding: "64px 32px", textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>{tab === "flights" ? "✈️" : tab === "stays" ? "🏨" : "🎯"}</div>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, color: "#ccc", marginBottom: 8 }}>Nothing booked here yet</p>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, color: "#ccc", marginBottom: 8 }}>Nothing booked here yet</p>
           <button onClick={onClose} style={{ padding: "11px 28px", borderRadius: 8, background: "#003580", border: "none", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>Plan a trip →</button>
         </div>
       </div>
@@ -914,11 +1291,11 @@ function MyTrips({ user, onClose, onPlan }) {
         <div style={{ padding: "24px 0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e8edf5", marginBottom: 32 }}>
           <TripDoneLogo/><button onClick={onClose} style={{ padding: "9px 22px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 500, cursor: "pointer" }}>← Back</button>
         </div>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 36, fontWeight: 300, color: "#1a1a1a", marginBottom: 4 }}>My Trips</h1>
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 36, fontWeight: 300, color: "#1a1a1a", marginBottom: 4 }}>My Trips</h1>
         <p style={{ fontSize: 14, color: "#888", marginBottom: 32 }}>Itineraries you've built — pick up where you left off.</p>
         <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #e8edf5", padding: "64px 32px", textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🗺</div>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, color: "#ccc", marginBottom: 8 }}>No trips yet</p>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 24, color: "#ccc", marginBottom: 8 }}>No trips yet</p>
           <button onClick={onPlan} style={{ padding: "12px 32px", borderRadius: 8, background: "#003580", border: "none", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>Plan a trip →</button>
         </div>
       </div>
@@ -953,7 +1330,7 @@ function SettingsPage({ user, onClose, onSignOut }) {
         <div style={{ padding: "24px 0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e8edf5", marginBottom: 32 }}>
           <TripDoneLogo/><button onClick={onClose} style={{ padding: "9px 22px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 500, cursor: "pointer" }}>← Back</button>
         </div>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: "#1a1a1a", marginBottom: 2 }}>Settings</h1>
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, color: "#1a1a1a", marginBottom: 2 }}>Settings</h1>
         <p style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>{user.name} · {user.email}</p>
         <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
           {tabs.map(t => <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding: "9px 18px", borderRadius: 8, border: `1.5px solid ${activeTab === t.key ? "#003580" : "#e0e6f0"}`, background: activeTab === t.key ? "#003580" : "#fff", color: activeTab === t.key ? "#fff" : "#555", fontSize: 13.5, cursor: "pointer" }}>{t.label}</button>)}
@@ -1013,8 +1390,8 @@ function BookingPage({ itinerary, onBack, onHome }) {
       </nav>
       <div style={{ background: "linear-gradient(135deg, #003580 0%, #0c4a8a 100%)", padding: "52px 5vw 0", width: "100%" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 300, color: "#fff", marginBottom: 8, lineHeight: 1.1 }}>{itinerary?.destination || "Your Trip"}</h1>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", color: "rgba(255,255,255,0.65)", fontSize: 18, marginBottom: 28 }}>{itinerary?.tagline}</p>
+          <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 300, color: "#fff", marginBottom: 8, lineHeight: 1.1 }}>{itinerary?.destination || "Your Trip"}</h1>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.65)", fontSize: 18, marginBottom: 28 }}>{itinerary?.tagline}</p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 32 }}>
             {[{ label: "Duration", value: itinerary?.duration || `${itinerary?.days?.length || 0} days` }, { label: "Stay", value: itinerary?.hotel?.name || "—" }, { label: "Est. hotel", value: itinerary?.hotel?.priceRange || "—" }].map(s => (
               <div key={s.label} style={{ background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 16px", backdropFilter: "blur(8px)" }}>
@@ -1033,7 +1410,7 @@ function BookingPage({ itinerary, onBack, onHome }) {
           <div style={{ animation: "fadeUp 0.3s ease" }}>
             {itinerary?.practicalInfo && (
               <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #e8edf5", padding: "24px 26px", marginBottom: 16 }}>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: "#1a1a1a", marginBottom: 16 }}>Trip at a glance</h2>
+                <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 400, color: "#1a1a1a", marginBottom: 16 }}>Trip at a glance</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
                   {[{ label: "Getting around", value: itinerary.practicalInfo.bestTransport }, { label: "Must book ahead", value: itinerary.practicalInfo.mustBook }, { label: "Packing tip", value: itinerary.practicalInfo.packingTip }].filter(i => i.value).map(item => (
                     <div key={item.label} style={{ background: "#f8f9ff", borderRadius: 10, padding: "14px 16px" }}>
@@ -1046,7 +1423,7 @@ function BookingPage({ itinerary, onBack, onHome }) {
             )}
             {itinerary?.packingList && (
               <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #e8edf5", padding: "24px 26px", marginBottom: 16 }}>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: "#1a1a1a", marginBottom: 16 }}>Packing list</h2>
+                <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 400, color: "#1a1a1a", marginBottom: 16 }}>Packing list</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 20 }}>
                   {[{ title: "Essentials", items: itinerary.packingList.essentials }, { title: "Clothing", items: itinerary.packingList.clothing }, { title: "Extras", items: itinerary.packingList.extras }].map(cat => (
                     <div key={cat.title}>
@@ -1072,7 +1449,7 @@ function BookingPage({ itinerary, onBack, onHome }) {
             {itinerary?.days?.[activeDay] && (
               <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #e8edf5", padding: "28px 32px" }}>
                 <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#003580", marginBottom: 6 }}>Day {itinerary.days[activeDay].day}</div>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 24 }}>{itinerary.days[activeDay].theme}</h2>
+                <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 24 }}>{itinerary.days[activeDay].theme}</h2>
                 {[{ label: "Morning", icon: "☀️", value: itinerary.days[activeDay].morning }, { label: "Afternoon", icon: "⛅", value: itinerary.days[activeDay].afternoon }, { label: "Evening", icon: "🌙", value: itinerary.days[activeDay].evening }, { label: "Getting around", icon: "🚌", value: itinerary.days[activeDay].transport }].map(item => (
                   <div key={item.label} style={{ display: "flex", gap: 14, marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid #f0f4ff" }}>
                     <div style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{item.icon}</div>
@@ -1091,7 +1468,7 @@ function BookingPage({ itinerary, onBack, onHome }) {
           <div style={{ animation: "fadeUp 0.3s ease" }}>
             <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "32px 36px", marginBottom: 20 }}>
               <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 8 }}>Recommended stay</div>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, color: "#fff", fontWeight: 300, marginBottom: 6 }}>{itinerary?.hotel?.name}</h2>
+              <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 32, color: "#fff", fontWeight: 300, marginBottom: 6 }}>{itinerary?.hotel?.name}</h2>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 16 }}>{itinerary?.hotel?.area}</div>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6, marginBottom: 20 }}>{itinerary?.hotel?.description}</div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
@@ -1104,7 +1481,7 @@ function BookingPage({ itinerary, onBack, onHome }) {
                 {[{ tier: "Budget option", data: itinerary.alternatives.budget }, { tier: "Luxury option", data: itinerary.alternatives.luxury }].map(({ tier, data }) => data ? (
                   <div key={tier} style={{ background: "#fff", borderRadius: 14, border: "1.5px solid #e8edf5", padding: "22px 24px" }}>
                     <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", marginBottom: 8, fontWeight: 600 }}>{tier}</div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "#1a1a1a", marginBottom: 4 }}>{data.hotel}</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 20, color: "#1a1a1a", marginBottom: 4 }}>{data.hotel}</div>
                     <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>{data.area}</div>
                     <div style={{ fontSize: 15, color: "#0ea5e9", fontWeight: 600, marginBottom: 10 }}>{data.priceRange}</div>
                     <div style={{ fontSize: 13, color: "#666", lineHeight: 1.5 }}>{data.note}</div>
@@ -1149,11 +1526,11 @@ function PricingPage({ onHome, user, onSignIn, onSignUp, onBookings, onSignOut, 
     <PageShell onHome={onHome} user={user} onSignIn={onSignIn} onSignUp={onSignUp} onBookings={onBookings} onSignOut={onSignOut} onPage={onPage} onSettings={onSettings} onTrips={onTrips}>
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "80px 5vw 120px" }}>
         <div style={{ textAlign: "center", marginBottom: 72 }}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 20 }}>Always free.<br/><em style={{ color: "#003580" }}>No hidden costs.</em></h1>
+          <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 20 }}>Always free.<br/><span style={{ color: "#003580", fontWeight: 600 }}>No hidden costs.</span></h1>
           <p style={{ fontSize: 18, color: "#666", maxWidth: 580, margin: "0 auto", lineHeight: 1.8, fontWeight: 300 }}>Planning your perfect trip shouldn't cost a penny. TripDone is completely free to use — every itinerary, every recommendation, every insider tip.</p>
         </div>
         <div style={{ background: "#003580", borderRadius: 20, padding: "56px 48px", textAlign: "center", marginBottom: 48 }}>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 80, fontWeight: 300, color: "#fff", lineHeight: 1, marginBottom: 8 }}>£0</div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 80, fontWeight: 300, color: "#fff", lineHeight: 1, marginBottom: 8 }}>£0</div>
           <div style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", marginBottom: 40, fontWeight: 300 }}>Forever. No subscription. No credit card.</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 48 }}>
             {["AI-generated itineraries", "Day-by-day planning", "Hotel recommendations", "Insider tips & hidden gems", "Chat refinement", "Packing lists"].map(f => (
@@ -1165,7 +1542,7 @@ function PricingPage({ onHome, user, onSignIn, onSignUp, onBookings, onSignOut, 
           <button onClick={onPlan} style={{ padding: "16px 44px", borderRadius: 8, background: "#fff", border: "none", color: "#003580", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Start planning for free →</button>
         </div>
         <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #e8edf5", padding: "40px 44px" }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 16 }}>So how does TripDone work?</h2>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 16 }}>So how does TripDone work?</h2>
           <p style={{ fontSize: 15, color: "#555", lineHeight: 1.8, marginBottom: 16, fontWeight: 300 }}>We earn a small commission when you choose to book flights, hotels, or activities through our recommended links — at no extra cost to you whatsoever.</p>
           <p style={{ fontSize: 15, color: "#555", lineHeight: 1.8, fontWeight: 300 }}>This model means our interests are completely aligned with yours. No paywalls, no upsells, no surprises — just great travel planning, completely free.</p>
         </div>
@@ -1186,14 +1563,14 @@ function HowItWorksPage({ onHome, user, onSignIn, onSignUp, onBookings, onSignOu
     <PageShell onHome={onHome} user={user} onSignIn={onSignIn} onSignUp={onSignUp} onBookings={onBookings} onSignOut={onSignOut} onPage={onPage} onSettings={onSettings} onTrips={onTrips}>
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "80px 5vw 120px" }}>
         <div style={{ textAlign: "center", marginBottom: 80 }}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 20 }}>From idea to itinerary<br/><em style={{ color: "#003580" }}>in minutes.</em></h1>
+          <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 20 }}>From idea to itinerary<br/><span style={{ color: "#003580", fontWeight: 600 }}>in minutes.</span></h1>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
           {steps.map((s, i) => (
             <div key={s.num} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
               <div style={{ order: i % 2 === 0 ? 0 : 1 }}>
                 <div style={{ fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", color: "#003580", marginBottom: 12 }}>Step {s.num}</div>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 36, fontWeight: 300, color: "#1a1a1a", marginBottom: 16, lineHeight: 1.2 }}>{s.title}</h2>
+                <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 36, fontWeight: 300, color: "#1a1a1a", marginBottom: 16, lineHeight: 1.2 }}>{s.title}</h2>
                 <p style={{ fontSize: 15, color: "#555", lineHeight: 1.8, fontWeight: 300 }}>{s.body}</p>
               </div>
               <div style={{ order: i % 2 === 0 ? 1 : 0 }}><div style={{ borderRadius: 16, overflow: "hidden", height: 280, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}><img src={s.img} alt={s.title} style={{ width: "100%", height: "100%", objectFit: "cover" }}/></div></div>
@@ -1214,7 +1591,7 @@ function DestinationsPage({ onHome, user, onSignIn, onSignUp, onBookings, onSign
     <PageShell onHome={onHome} user={user} onSignIn={onSignIn} onSignUp={onSignUp} onBookings={onBookings} onSignOut={onSignOut} onPage={onPage} onSettings={onSettings} onTrips={onTrips}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 5vw 120px" }}>
         <div style={{ textAlign: "center", marginBottom: 64 }}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 20 }}>Where do you want<br/><em style={{ color: "#003580" }}>to go next?</em></h1>
+          <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 20 }}>Where do you want<br/><span style={{ color: "#003580", fontWeight: 600 }}>to go next?</span></h1>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
           {DESTINATIONS_DATA.map((d) => (
@@ -1225,7 +1602,7 @@ function DestinationsPage({ onHome, user, onSignIn, onSignUp, onBookings, onSign
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.05) 60%)" }}/>
               <div style={{ position: "absolute", top: 16, left: 16 }}><span style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", color: "#fff", fontSize: 11, padding: "4px 10px", borderRadius: 20 }}>{d.tag}</span></div>
               <div style={{ position: "absolute", bottom: 22, left: 22, right: 22 }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 400, color: "#fff", marginBottom: 6 }}>{d.name}</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 24, fontWeight: 400, color: "#fff", marginBottom: 6 }}>{d.name}</div>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5, marginBottom: 10 }}>{d.desc}</div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>✦ Recommended: {d.duration}</div>
               </div>
@@ -1245,8 +1622,8 @@ function BlogPage({ onHome, user, onSignIn, onSignUp, onBookings, onSignOut, onP
       <div style={{ maxWidth: 740, margin: "0 auto", padding: "60px 5vw 120px" }}>
         <button onClick={() => setPost(null)} style={{ background: "none", border: "none", color: "#003580", cursor: "pointer", fontSize: 14, marginBottom: 32, padding: 0 }}>← Back to blog</button>
         <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#003580", marginBottom: 12 }}>{post.category}</div>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 12 }}>{post.title}</h1>
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontStyle: "italic", color: "#888", marginBottom: 24 }}>{post.subtitle}</p>
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 12 }}>{post.title}</h1>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 20, color: "#888", marginBottom: 24 }}>{post.subtitle}</p>
         <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 36 }}>
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#003580", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600 }}>TP</div>
           <div><div style={{ fontSize: 13.5, fontWeight: 500, color: "#1a1a1a" }}>{post.author}</div><div style={{ fontSize: 12, color: "#aaa" }}>{post.date}</div></div>
@@ -1262,7 +1639,7 @@ function BlogPage({ onHome, user, onSignIn, onSignUp, onBookings, onSignOut, onP
     <PageShell onHome={onHome} user={user} onSignIn={onSignIn} onSignUp={onSignUp} onBookings={onBookings} onSignOut={onSignOut} onPage={onPage} onSettings={onSettings} onTrips={onTrips}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 5vw 120px" }}>
         <div style={{ textAlign: "center", marginBottom: 64 }}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(40px, 5vw, 68px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1 }}>Stories, tips &<br/><em style={{ color: "#003580" }}>travel inspiration.</em></h1>
+          <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(40px, 5vw, 68px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1 }}>Stories, tips &<br/><span style={{ color: "#003580", fontWeight: 600 }}>travel inspiration.</span></h1>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 28 }}>
           {BLOG_POSTS.map(p => (
@@ -1271,7 +1648,7 @@ function BlogPage({ onHome, user, onSignIn, onSignUp, onBookings, onSignOut, onP
               <div style={{ height: 220, overflow: "hidden" }}><img src={p.photo} alt={p.title} style={{ width: "100%", height: "100%", objectFit: "cover" }}/></div>
               <div style={{ padding: "24px 26px 28px" }}>
                 <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#003580", marginBottom: 10 }}>{p.category}</div>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 400, color: "#1a1a1a", marginBottom: 8, lineHeight: 1.2 }}>{p.title}</h2>
+                <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 26, fontWeight: 400, color: "#1a1a1a", marginBottom: 8, lineHeight: 1.2 }}>{p.title}</h2>
                 <p style={{ fontSize: 13.5, color: "#777", lineHeight: 1.6, marginBottom: 20 }}>{p.subtitle}</p>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 12, color: "#aaa" }}>{p.date} · {p.author}</span>
@@ -1300,10 +1677,10 @@ function HelpPage({ onHome, user, onSignIn, onSignUp, onBookings, onSignOut, onP
     <PageShell onHome={onHome} user={user} onSignIn={onSignIn} onSignUp={onSignUp} onBookings={onBookings} onSignOut={onSignOut} onPage={onPage} onSettings={onSettings} onTrips={onTrips}>
       <div style={{ maxWidth: 820, margin: "0 auto", padding: "80px 5vw 120px" }}>
         <div style={{ textAlign: "center", marginBottom: 64 }}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(40px, 5vw, 68px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 16 }}>How can we<br/><em style={{ color: "#003580" }}>help you?</em></h1>
+          <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(40px, 5vw, 68px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.1, marginBottom: 16 }}>How can we<br/><span style={{ color: "#003580", fontWeight: 600 }}>help you?</span></h1>
         </div>
         <div style={{ background: "#003580", borderRadius: 20, padding: "48px 44px", marginBottom: 72 }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: "#fff", marginBottom: 8 }}>Need help?</h2>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, color: "#fff", marginBottom: 8 }}>Need help?</h2>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginBottom: 28 }}>Send us a message and we'll get back to you as soon as possible.</p>
           {sent ? <div style={{ textAlign: "center", padding: "20px 0" }}><div style={{ fontSize: 32, marginBottom: 12 }}>✓</div><p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)" }}>Message sent!</p></div> : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1315,7 +1692,7 @@ function HelpPage({ onHome, user, onSignIn, onSignUp, onBookings, onSignOut, onP
           )}
         </div>
         <div style={{ marginBottom: 72 }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 24 }}>Frequently asked questions</h2>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 400, color: "#1a1a1a", marginBottom: 24 }}>Frequently asked questions</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {FAQS.map((faq, i) => (
               <div key={i} style={{ background: "#fff", border: "1.5px solid #e8edf5", borderRadius: 12, overflow: "hidden" }}>
@@ -1396,8 +1773,26 @@ export default function RoamHomepage() {
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #003580; border-radius: 2px; }
         .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.2fr; gap: 48px; }
+        .audience-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .example-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .packing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .nav-plan-btn { display: inline-flex; }
         @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 700px) {
+          .steps-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+          .example-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+          .footer-grid { grid-template-columns: 1fr; }
+          .nav-plan-btn { display: none !important; }
+          .audience-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .audience-grid .audience-card { height: 140px !important; border-radius: 12px !important; }
+          .steps-grid { grid-template-columns: 1fr; gap: 12px; }
+          .steps-grid > div > div { padding: 20px 18px !important; }
+          .example-grid { grid-template-columns: 1fr; }
+          .packing-grid { grid-template-columns: 1fr; gap: 12px; }
+        }
       `}</style>
 
       {authModal && <AuthModal mode={authModal} onClose={() => setAuthModal(null)} onAuth={u => { setUser(u); setAuthModal(null); }}/>}
@@ -1406,7 +1801,7 @@ export default function RoamHomepage() {
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "12px 5vw", minHeight: 68, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "2px solid rgba(0,53,128,0.1)" }}>
         <div style={{ cursor: "pointer" }} onClick={goHome}><TripDoneLogo/></div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button onClick={setShowApp} style={{ padding: "10px 26px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,53,128,0.35)" }}>Plan my trip</button>
+          <button onClick={setShowApp} className="nav-plan-btn" style={{ padding: "10px 26px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,53,128,0.35)" }}>Plan my trip</button>
           <AccountDropdown {...sharedProps} onPlan={setShowApp}/>
         </div>
       </nav>
@@ -1416,7 +1811,7 @@ export default function RoamHomepage() {
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", textAlign: "center", padding: "100px 6vw 20px" }}>
             <p style={{ fontSize: "clamp(13px, 1.8vw, 22px)", letterSpacing: "0.25em", textTransform: "uppercase", color: "#003580", marginBottom: 16, fontWeight: 600 }}>AI-Powered Travel Agent</p>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(44px, 7vw, 100px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.05, marginBottom: 20 }}>Your Perfect Trip,<br/><em style={{ color: "#003580" }}>Planned For You.</em></h1>
+            <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(44px, 7vw, 100px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.05, marginBottom: 20 }}>Your Perfect Trip,<br/><span style={{ color: "#003580", fontWeight: 600 }}>Planned For You.</span></h1>
             <p style={{ fontSize: "clamp(15px, 1.5vw, 20px)", color: "#666", maxWidth: 560, margin: "0 auto 12px", lineHeight: 1.7, fontWeight: 300 }}>Tell us where you want to go and what you love. We'll handle everything else.</p>
             <p style={{ fontSize: "clamp(12px, 1.2vw, 15px)", color: "#003580", maxWidth: 560, margin: "0 auto 32px", fontWeight: 500, letterSpacing: "0.05em" }}>All your favourite travel sites — in one place. Free forever.</p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -1439,7 +1834,7 @@ export default function RoamHomepage() {
       <section style={{ padding: "120px 5vw", maxWidth: 960, margin: "0 auto", textAlign: "center" }}>
         <FadeIn>
           <p style={{ fontSize: 12, letterSpacing: "0.2em", color: "#003580", textTransform: "uppercase", marginBottom: 12 }}>Why TripDone</p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(34px, 4vw, 60px)", fontWeight: 300, lineHeight: 1.2, color: "#1a1a1a", marginBottom: 28 }}>Travel should feel like an escape,<br/><em>not a second job.</em></h2>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(34px, 4vw, 60px)", fontWeight: 300, lineHeight: 1.2, color: "#1a1a1a", marginBottom: 28 }}>Travel should feel like an escape,<br/><em>not a second job.</em></h2>
           <p style={{ fontSize: "clamp(15px, 1.4vw, 18px)", color: "#666", lineHeight: 1.8, maxWidth: 680, margin: "0 auto 48px", fontWeight: 300 }}>Most people spend more time planning their holiday than enjoying it. TripDone changes that. Our AI builds your entire trip in minutes — every hotel, every day, every booking link — all in one place.</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, textAlign: "left" }}>
             {[{ title: "Saves you time", desc: "A full itinerary in under 2 minutes. What used to take hours of research is done before your coffee goes cold." }, { title: "Saves you money", desc: "We compare across all major booking platforms so you always get the best price — without the legwork." }, { title: "All in one place", desc: "Flights, hotels, activities, transfers — every platform you trust, surfaced in one clean screen." }].map(c => (
@@ -1457,16 +1852,16 @@ export default function RoamHomepage() {
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <p style={{ fontSize: 12, letterSpacing: "0.2em", color: "#003580", textTransform: "uppercase", marginBottom: 12, textAlign: "center" }}>Who it's for</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 300, textAlign: "center", marginBottom: 52, color: "#1a1a1a" }}>Built for every kind of traveller</h2>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 300, textAlign: "center", marginBottom: 52, color: "#1a1a1a" }}>Built for every kind of traveller</h2>
           </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          <div className="audience-grid">
             {AUDIENCE_DATA.map((a, i) => (
               <div key={a.label} style={{ opacity: 0, transform: "translateY(28px)", animation: `fadeUp 0.7s ease ${i * 0.08}s forwards` }}>
-                <div style={{ borderRadius: 14, overflow: "hidden", position: "relative", height: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
+                <div className="audience-card" style={{ borderRadius: 14, overflow: "hidden", position: "relative", height: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
                   <img src={a.photo} alt={a.label} style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} onError={e => { e.target.style.display = "none"; }}/>
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.1) 55%)" }}/>
                   <div style={{ position: "absolute", bottom: 22, left: 22, right: 22 }}>
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: "#fff", marginBottom: 6 }}>{a.label}</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 400, color: "#fff", marginBottom: 6 }}>{a.label}</div>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>{a.desc}</div>
                   </div>
                 </div>
@@ -1480,14 +1875,14 @@ export default function RoamHomepage() {
       <section style={{ background: "#003580", padding: "120px 5vw" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(30px, 3.5vw, 48px)", fontWeight: 300, color: "#fff", textAlign: "center", marginBottom: 72 }}>From idea to itinerary<br/><em style={{ color: "#7ba4db" }}>in minutes</em></h2>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(30px, 3.5vw, 48px)", fontWeight: 300, color: "#fff", textAlign: "center", marginBottom: 72 }}>From idea to itinerary<br/><span style={{ color: "#7ba4db", fontWeight: 600 }}>in minutes</span></h2>
           </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+          <div className="steps-grid">
             {STEPS.map((s, i) => (
               <FadeIn key={s.num} delay={i * 0.12}>
                 <div style={{ padding: "36px 32px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}>
-                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 52, fontWeight: 300, color: "#fff", lineHeight: 1, marginBottom: 20, opacity: 0.8 }}>{s.num}</div>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: "#fff", marginBottom: 12, lineHeight: 1.3 }}>{s.title}</h3>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 52, fontWeight: 300, color: "#fff", lineHeight: 1, marginBottom: 20, opacity: 0.8 }}>{s.num}</div>
+                  <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 400, color: "#fff", marginBottom: 12, lineHeight: 1.3 }}>{s.title}</h3>
                   <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, fontWeight: 300 }}>{s.desc}</p>
                 </div>
               </FadeIn>
@@ -1501,25 +1896,24 @@ export default function RoamHomepage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
             <p style={{ fontSize: 12, letterSpacing: "0.2em", color: "#003580", textTransform: "uppercase", marginBottom: 10, textAlign: "center" }}>See it in action</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 300, color: "#1a1a1a", textAlign: "center", marginBottom: 52 }}>A real TripDone itinerary</h2>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 300, color: "#1a1a1a", textAlign: "center", marginBottom: 52 }}>A real TripDone itinerary</h2>
           </FadeIn>
           <FadeIn delay={0.05}>
             <div style={{ background: "#1a1a1a", borderRadius: 14, padding: "24px 28px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div>
                 <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 6 }}>📍 Tokyo & Kyoto, Japan · 7 days · Recommended stay</div>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, color: "#fff" }}>{EXAMPLE.hotel.name}</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, color: "#fff" }}>{EXAMPLE.hotel.name}</div>
                 <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>{EXAMPLE.hotel.area}</div>
               </div>
               <div style={{ background: "rgba(14,165,233,0.15)", borderRadius: 8, padding: "8px 18px", fontSize: 15, color: "#0ea5e9", fontWeight: 600, whiteSpace: "nowrap" }}>{EXAMPLE.hotel.priceRange}</div>
             </div>
           </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-            {EXAMPLE.days.map((day, i) => (
+          <div className="example-grid">((day, i) => (
               <FadeIn key={day.range} delay={i * 0.1}>
                 <div style={{ border: "1.5px solid #e0e6f0", borderRadius: 14, padding: "22px 24px", background: "#fff", height: "100%", display: "flex", flexDirection: "column" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                     <div style={{ background: "#003580", color: "#fff", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>{day.range}</div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: "#1a1a1a" }}>{day.theme}</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 17, color: "#1a1a1a" }}>{day.theme}</div>
                   </div>
                   {day.checkin && (
                     <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "flex-start", background: "#f8f9ff", borderRadius: 8, padding: "8px 10px", border: "1px solid #e8edf5" }}>
@@ -1557,13 +1951,13 @@ export default function RoamHomepage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
             <p style={{ fontSize: 12, letterSpacing: "0.2em", color: "#003580", textTransform: "uppercase", marginBottom: 12, textAlign: "center" }}>What travellers say</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 300, color: "#1a1a1a", textAlign: "center", marginBottom: 60 }}>Trips people actually<br/><em>loved.</em></h2>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 300, color: "#1a1a1a", textAlign: "center", marginBottom: 60 }}>Trips people actually<br/><em>loved.</em></h2>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {TESTIMONIALS.map((t, i) => (
               <FadeIn key={t.name} delay={i * 0.08}>
                 <div style={{ background: "#f8f9ff", borderRadius: 16, padding: "28px 26px", border: "1.5px solid #e8edf5", height: "100%", display: "flex", flexDirection: "column" }}>
-                  <div style={{ fontSize: 32, color: "#003580", lineHeight: 1, marginBottom: 16, fontFamily: "'Cormorant Garamond', serif", opacity: 0.4 }}>"</div>
+                  <div style={{ fontSize: 32, color: "#003580", lineHeight: 1, marginBottom: 16, fontFamily: "'DM Sans', sans-serif", opacity: 0.4 }}>"</div>
                   <p style={{ fontSize: 14.5, color: "#333", lineHeight: 1.8, fontWeight: 300, flex: 1, marginBottom: 20 }}>{t.text}</p>
                   <div style={{ borderTop: "1px solid #e8edf5", paddingTop: 16, display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#003580", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{t.initials}</div>
@@ -1583,7 +1977,7 @@ export default function RoamHomepage() {
       <section style={{ overflow: "hidden", margin: "0 5vw 80px", borderRadius: 20, background: "#003580" }}>
         <div style={{ padding: "100px 5vw", textAlign: "center" }}>
           <FadeIn>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 68px)", fontWeight: 300, color: "#fff", marginBottom: 16, lineHeight: 1.1 }}>Your next adventure<br/><em style={{ color: "#7ba4db" }}>starts here.</em></h2>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(36px, 5vw, 68px)", fontWeight: 300, color: "#fff", marginBottom: 16, lineHeight: 1.1 }}>Your next adventure<br/><span style={{ color: "#7ba4db", fontWeight: 600 }}>starts here.</span></h2>
             <p style={{ fontSize: "clamp(14px, 1.4vw, 17px)", color: "rgba(255,255,255,0.6)", marginBottom: 44, fontWeight: 300 }}>Free to use. No account needed. Just tell us where you want to go.</p>
             <button onClick={setShowApp} style={{ padding: "18px 52px", borderRadius: 6, background: "#fff", border: "none", color: "#003580", fontSize: 16, fontWeight: 500, cursor: "pointer", boxShadow: "0 8px 32px rgba(255,255,255,0.2)" }}>Plan my trip for free →</button>
           </FadeIn>
