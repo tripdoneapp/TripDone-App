@@ -23,11 +23,18 @@ const STEPS = [
 ];
 
 const EXAMPLE = {
-  hotel: { name: "Wise Owl Hostel, Shinjuku", area: "Shinjuku, Tokyo", priceRange: "£38/night" },
+  destination: "Japan — Tokyo, Kyoto & Osaka",
+  duration: "9 days",
+  locations: [
+    { location: "Tokyo", nights: 3, hotel: { name: "Wise Owl Hostel Shinjuku", area: "Shinjuku, Tokyo", priceRange: "£32/night" } },
+    { location: "Kyoto", nights: 3, hotel: { name: "Piece Hostel Sanjo", area: "Sanjo, Kyoto", priceRange: "£28/night" } },
+    { location: "Osaka", nights: 3, hotel: { name: "Hana Hostel Osaka", area: "Namba, Osaka", priceRange: "£26/night" } },
+  ],
   days: [
-    { range: "Days 1–2", theme: "Tokyo Arrival & City", checkin: "Check in to Wise Owl Hostel, Shinjuku", morning: "Settle in, explore Shibuya Crossing at rush hour", afternoon: "Meiji Shrine & Harajuku", evening: "Ichiran Ramen — iconic solo ramen booths", transport: "Tokyo Metro day pass — unlimited travel across the city", insiderTip: "Watch the crossing from the 2nd-floor Starbucks — arrive 5 mins early" },
-    { range: "Days 3–5", theme: "Old Tokyo & Art", morning: "Senso-ji Temple, Asakusa — arrive at 7am", afternoon: "teamLab Planets in Toyosu — book ahead", evening: "Yakitori under the train tracks, Yurakucho", transport: "Tokyo Metro — Asakusa & Toyosu lines direct from Shinjuku", insiderTip: "The back lanes behind Senso-ji are full of craft shops tourists miss" },
-    { range: "Days 6–7", theme: "Kyoto Day Trips", morning: "Fushimi Inari shrine gates at dawn", afternoon: "Arashiyama bamboo grove & Tenryu-ji garden", evening: "Kaiseki dinner in Gion then Shinkansen back to Tokyo", transport: "Shinkansen Tokyo → Kyoto (2h 15min) — book JR Pass or reserve seats in advance", insiderTip: "Fushimi Inari at dawn is otherworldly — catch the 6:30am train" },
+    { day: 1, location: "Tokyo", theme: "Arrival & Shibuya", isTravel: false, checkin: "Check in to Wise Owl Hostel, Shinjuku", morning: "Land at Narita, take Narita Express to Shinjuku (1h 30min)", afternoon: "Settle in, explore Shibuya Crossing at rush hour", evening: "Ichiran Ramen — solo booths, iconic first dinner", transport: "Tokyo Metro day pass — covers all major lines", insiderTip: "Watch the crossing from the 2nd-floor Starbucks — arrive 5 mins before the hour" },
+    { day: 2, location: "Tokyo", theme: "Old Tokyo & Temples", isTravel: false, morning: "Senso-ji Temple, Asakusa — arrive before 8am to beat the crowds", afternoon: "teamLab Planets in Toyosu — book online in advance", evening: "Yakitori under the train tracks at Yurakucho", transport: "Tokyo Metro — Ginza line to Asakusa, Yurakucho line back", insiderTip: "The back lanes behind Senso-ji have craft shops most tourists walk straight past" },
+    { day: 4, location: "Kyoto", theme: "Tokyo → Kyoto", isTravel: true, travelFrom: "Tokyo", travelTo: "Kyoto", travelMethod: "Shinkansen (Nozomi)", travelDuration: "2h 15min", morning: "Early Shinkansen from Tokyo Station — seats book up, reserve in advance", checkin: "Check in to Piece Hostel Sanjo, Kyoto", afternoon: "Fushimi Inari shrine gates — climb beyond the tourist crowds to the top", evening: "Dinner in Gion — try obanzai (Kyoto-style small plates)", transport: "JR Pass covers the Shinkansen. Local buses cover Kyoto city (¥230 flat fare)", insiderTip: "Fushimi Inari at dusk is even better than dawn — most people leave by midday" },
+    { day: 7, location: "Osaka", theme: "Kyoto → Osaka", isTravel: true, travelFrom: "Kyoto", travelTo: "Osaka", travelMethod: "JR Shinkaisoku train", travelDuration: "18min", morning: "Quick hop to Osaka — one of the easiest moves of the trip", checkin: "Check in to Hana Hostel, Namba", afternoon: "Dotonbori — takoyaki, okonomiyaki and neon signage chaos", evening: "Izakaya crawl in Shinsaibashi — order everything", transport: "Osaka Metro day pass (¥800) — covers all underground lines", insiderTip: "Osaka people will tell you about their favourite street food spot unprompted — ask them" },
   ],
 };
 
@@ -157,30 +164,46 @@ Return ONLY valid JSON, no markdown, no explanation. Format:
 {
   "destination": "string",
   "tagline": "short evocative description (max 10 words)",
-  "duration": "e.g. 7 days",
-  "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £75/night" },
-  "alternatives": {
-    "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £18/night", "note": "1 sentence" },
-    "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £220/night", "note": "1 sentence" }
-  },
-  "days": [{ "day": 1, "theme": "string", "morning": "string", "afternoon": "string", "evening": "string", "transport": "string", "insiderTip": "string" }],
+  "duration": "e.g. 14 days",
+  "locations": [
+    {
+      "location": "e.g. Tokyo",
+      "nights": 2,
+      "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £75/night" },
+      "alternatives": {
+        "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £18/night", "note": "1 sentence" },
+        "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £220/night", "note": "1 sentence" }
+      }
+    }
+  ],
+  "days": [{ "day": 1, "location": "e.g. Tokyo", "theme": "string", "isTravel": false, "travelFrom": null, "travelTo": null, "travelMethod": null, "travelDuration": null, "morning": "string", "afternoon": "string", "evening": "string", "transport": "string", "insiderTip": "string" }],
   "practicalInfo": { "bestTransport": "string", "mustBook": "string", "packingTip": "string" },
   "packingList": { "essentials": ["item1","item2"], "clothing": ["item1","item2"], "extras": ["item1","item2"] },
   "helpfulLinks": [
-    { "title": "string", "desc": "1 short sentence describing what the article covers", "url": "https://...", "source": "e.g. Lonely Planet" }
+    { "title": "string", "desc": "1 short sentence", "url": "https://...", "source": "e.g. Lonely Planet" }
   ]
 }
+
+MOVEMENT & LOCATION RULES — follow these exactly:
+- Use the "Movement frequency" value to determine how many nights to spend in each location.
+- every_day = 1 night per location. every_2_days = 2 nights. every_3_days = 3 nights. every_4_days = 4 nights. every_5_days = 5 nights. stay_put = entire trip in one location.
+- Calculate the number of locations from trip duration divided by nights per location. e.g. 14 days / every 2 days = 7 locations.
+- Day trips from a base city (e.g. day trip to Nara from Osaka) do NOT count as a new location — no new hotel needed. Use your judgment for what is a genuine overnight move vs a day trip.
+- For travel days (when moving between locations): set "isTravel": true, "travelFrom": "City A", "travelTo": "City B", "travelMethod": "e.g. Shinkansen", "travelDuration": "e.g. 2h 15min". Still fill in afternoon and evening for what they can do after arriving. Morning should describe the journey.
+- Each location in "locations" array must have its own hotel recommendation.
+
 HOTEL TIER RULES — follow these exactly:
 - "hotel" (recommended): A real, highly-rated hotel or guesthouse with excellent reviews, priced £50-£100/night. Specific real name required.
-- "alternatives.budget": A real hostel — the best-reviewed hostel in that destination on booking platforms like Hostelworld or Booking.com. Must be a hostel, not a hotel. Priced under £30/night (dorm) or £50/night (private). Specific real name required.
-- "alternatives.luxury": A real 5-star hotel or luxury resort, £150+/night. Specific real name required.
-HELPFUL LINKS RULES — follow these exactly:
-- Include 5-7 links total.
-- Only editorial articles, travel guides, and informational content — NO booking sites, NO Airbnb, NO Skyscanner, NO hotel booking platforms.
-- Good sources: Lonely Planet, Culture Trip, Time Out, BBC Travel, National Geographic Travel, The Guardian Travel, Timeout, Condé Nast Traveller, local tourism board sites, Wikipedia for context.
-- Mix of categories: things to do, food & drink guides, culture/history, practical travel tips, neighbourhood guides.
-- Use real URLs that are likely to exist (e.g. lonelyplanet.com/japan/tokyo, timeout.com/tokyo).
-Generate 4-7 days. Be specific with real place names. Make it feel curated, not generic.`;
+- "alternatives.budget": The best-reviewed hostel in that specific location on Hostelworld or Booking.com. Must be a hostel. Under £30/night dorm or £50/night private. Specific real name required.
+- "alternatives.luxury": A real 5-star hotel or luxury resort in that location, £150+/night. Specific real name required.
+
+HELPFUL LINKS RULES:
+- Include 5-7 links. Editorial articles and travel guides only — NO booking sites.
+- Good sources: Lonely Planet, Culture Trip, Time Out, BBC Travel, National Geographic, The Guardian Travel, Condé Nast Traveller, local tourism boards.
+- Mix: things to do, food guides, culture/history, practical tips, neighbourhood guides.
+- Use real URLs (e.g. lonelyplanet.com/japan/tokyo).
+
+Generate the correct number of days based on trip dates. Be specific with real place names. Make it feel curated, not generic.`;
 
 const REFINE_SYSTEM = `You are TripDone, a premium AI travel concierge. The user has an existing itinerary and wants to refine it. Respond conversationally and concisely — confirm what you've changed and why it's a great call. Keep responses under 3 sentences. Be warm, confident, and specific.`;
 
@@ -300,13 +323,18 @@ function LoadingScreen({ destination }) {
 // ─── Day Card ─────────────────────────────────────────────────────────────────
 function DayCard({ day, index }) {
   const [open, setOpen] = useState(index === 0);
+  const isTravel = day.isTravel;
   return (
-    <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, overflow: "hidden", marginBottom: 12, background: "#fdfbf8", boxShadow: open ? "0 4px 20px rgba(0,0,0,0.06)" : "none", transition: "box-shadow 0.2s" }}>
+    <div style={{ border: `1.5px solid ${isTravel ? "#fde8cc" : "#e8e2d9"}`, borderRadius: 14, overflow: "hidden", marginBottom: 12, background: isTravel ? "#fffaf5" : "#fdfbf8", boxShadow: open ? "0 4px 20px rgba(0,0,0,0.06)" : "none", transition: "box-shadow 0.2s" }}>
       <button onClick={() => setOpen(!open)} style={{ width: "100%", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#003580", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, flexShrink: 0 }}>{day.day}</div>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", background: isTravel ? "#f59e0b" : "#003580", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, flexShrink: 0 }}>{day.day}</div>
           <div>
-            <div style={{ fontSize: 14, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: "#1a1a1a" }}>Day {day.day}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ fontSize: 14, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: "#1a1a1a" }}>Day {day.day}</div>
+              {isTravel && <span style={{ fontSize: 10, background: "#f59e0b", color: "#fff", borderRadius: 4, padding: "2px 6px", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, letterSpacing: "0.05em" }}>TRAVEL DAY</span>}
+              {day.location && <span style={{ fontSize: 11, color: "#003580", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>📍 {day.location}</span>}
+            </div>
             <div style={{ fontSize: 13, fontFamily: "'DM Sans', sans-serif", color: "#888" }}>{day.theme}</div>
           </div>
         </div>
@@ -314,38 +342,71 @@ function DayCard({ day, index }) {
       </button>
       {open && (
         <div style={{ padding: "0 20px 20px" }}>
-          <div style={{ height: 1, background: "#e8e2d9", marginBottom: 16 }}/>
-          {[{ label: "Morning", icon: "☀", value: day.morning }, { label: "Afternoon", icon: "⛅", value: day.afternoon }, { label: "Evening", icon: "🌙", value: day.evening }, { label: "Getting around", icon: "🚌", value: day.transport }].map(item => (
+          <div style={{ height: 1, background: isTravel ? "#fde8cc" : "#e8e2d9", marginBottom: 16 }}/>
+          {isTravel && day.travelFrom && (
+            <div style={{ background: "#fff8ee", borderRadius: 10, padding: "12px 14px", marginBottom: 16, border: "1.5px solid #fde8cc", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ fontSize: 22 }}>🚄</div>
+              <div>
+                <div style={{ fontSize: 13, fontFamily: "'DM Sans', sans-serif", fontWeight: 600, color: "#92400e" }}>{day.travelFrom} → {day.travelTo}</div>
+                <div style={{ fontSize: 12.5, fontFamily: "'DM Sans', sans-serif", color: "#b45309" }}>{day.travelMethod} · {day.travelDuration}</div>
+              </div>
+            </div>
+          )}
+          {[{ label: "Morning", icon: "☀", value: day.morning }, { label: "Afternoon", icon: "⛅", value: day.afternoon }, { label: "Evening", icon: "🌙", value: day.evening }, { label: "Getting around", icon: "🚌", value: day.transport }].filter(i => i.value).map(item => (
             <div key={item.label} style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 3 }}>{item.icon} {item.label}</div>
               <div style={{ fontSize: 14, color: "#333", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>{item.value}</div>
             </div>
           ))}
-          <div style={{ background: "#eef3ff", borderRadius: 8, padding: "10px 14px", borderLeft: "3px solid #003580", marginTop: 16 }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", fontFamily: "'DM Sans', sans-serif", marginBottom: 3 }}>✦ Insider tip</div>
-            <div style={{ fontSize: 13.5, color: "#003580", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>{day.insiderTip}</div>
-          </div>
+          {day.insiderTip && (
+            <div style={{ background: "#eef3ff", borderRadius: 8, padding: "10px 14px", borderLeft: "3px solid #003580", marginTop: 16 }}>
+              <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", fontFamily: "'DM Sans', sans-serif", marginBottom: 3 }}>✦ Insider tip</div>
+              <div style={{ fontSize: 13.5, color: "#003580", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>{day.insiderTip}</div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-// ─── Hotel Tier Toggle (NEW) ──────────────────────────────────────────────────
+// ─── Hotel Tier Toggle ────────────────────────────────────────────────────────
 function HotelTierToggle({ itinerary }) {
   const [tier, setTier] = useState("recommended");
   const [night, setNight] = useState(1);
-  const tiers = { budget: itinerary.alternatives?.budget, recommended: itinerary.hotel, luxury: itinerary.alternatives?.luxury };
-  const current = tiers[tier];
   const totalNights = itinerary.days ? itinerary.days.length : 7;
-  if (!current) return null;
+  const locations = itinerary.locations || [];
 
-  // Night display — same hotel throughout but shows which night you're viewing
+  const getNightLocation = (n) => {
+    let count = 0;
+    for (const loc of locations) {
+      count += loc.nights || 1;
+      if (n <= count) return loc;
+    }
+    return locations[locations.length - 1] || null;
+  };
+
+  const fallbackTiers = {
+    budget: itinerary.alternatives?.budget,
+    recommended: itinerary.hotel,
+    luxury: itinerary.alternatives?.luxury,
+  };
+
+  const loc = locations.length > 0 ? getNightLocation(night) : null;
+  const tiers = loc ? {
+    budget: loc.alternatives?.budget,
+    recommended: loc.hotel,
+    luxury: loc.alternatives?.luxury,
+  } : fallbackTiers;
+
+  const display = tiers[tier] || tiers.recommended;
+  if (!display) return null;
+
   const nightLabel = night === 1 ? "Check-in night" : night === totalNights ? "Last night" : `Night ${night}`;
+  const locationName = loc?.location || itinerary.hotel?.area || "";
 
   return (
     <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, padding: "18px 20px", marginBottom: 16, background: "#fdfbf8" }}>
-      {/* Header row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
         <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif" }}>🏨 Accommodation</div>
         <div style={{ display: "flex", gap: 4 }}>
@@ -356,24 +417,28 @@ function HotelTierToggle({ itinerary }) {
           ))}
         </div>
       </div>
-
-      {/* Night selector */}
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
         <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginRight: 4 }}>Night:</span>
-        {Array.from({ length: totalNights }, (_, i) => i + 1).map(n => (
-          <button key={n} onClick={() => setNight(n)} style={{ width: 30, height: 30, borderRadius: 8, border: `1.5px solid ${night === n ? "#003580" : "#e0e6f0"}`, background: night === n ? "#003580" : "transparent", color: night === n ? "#fff" : "#888", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: night === n ? 600 : 400, flexShrink: 0 }}>{n}</button>
-        ))}
+        {Array.from({ length: totalNights }, (_, i) => i + 1).map(n => {
+          const nLoc = locations.length > 0 ? getNightLocation(n) : null;
+          const isNewLoc = locations.length > 0 && (n === 1 || getNightLocation(n - 1)?.location !== nLoc?.location);
+          return (
+            <button key={n} onClick={() => setNight(n)}
+              title={nLoc?.location || ""}
+              style={{ width: 30, height: 30, borderRadius: 8, border: `1.5px solid ${night === n ? "#003580" : isNewLoc ? "#0ea5e9" : "#e0e6f0"}`, background: night === n ? "#003580" : "transparent", color: night === n ? "#fff" : isNewLoc ? "#0ea5e9" : "#888", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: night === n ? 600 : 400, flexShrink: 0 }}>{n}
+            </button>
+          );
+        })}
+        {locationName && <span style={{ fontSize: 11, color: "#003580", fontFamily: "'DM Sans', sans-serif", marginLeft: 4, fontWeight: 500 }}>— {locationName}</span>}
       </div>
-
-      {/* Hotel info */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 17, color: "#1a1a1a", marginBottom: 3 }}>{current.name || current.hotel}</div>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: "#888", marginBottom: 6 }}>{current.area}</div>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, color: "#555", lineHeight: 1.5 }}>{current.description || current.note}</div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 500, color: "#1a1a1a", marginBottom: 3 }}>{display.name || display.hotel}</div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: "#888", marginBottom: 6 }}>{display.area}</div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, color: "#555", lineHeight: 1.5 }}>{display.description || display.note}</div>
           <div style={{ marginTop: 8, fontSize: 11.5, color: "#003580", fontFamily: "'DM Sans', sans-serif" }}>✓ {nightLabel}</div>
         </div>
-        <div style={{ background: "#eef3ff", borderRadius: 8, padding: "6px 12px", fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#003580", fontWeight: 500, whiteSpace: "nowrap", marginLeft: 12, flexShrink: 0 }}>{current.priceRange}</div>
+        <div style={{ background: "#eef3ff", borderRadius: 8, padding: "6px 12px", fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#003580", fontWeight: 500, whiteSpace: "nowrap", marginLeft: 12, flexShrink: 0 }}>{display.priceRange}</div>
       </div>
     </div>
   );
@@ -953,7 +1018,7 @@ function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 function ScrollQuiz({ answers, setAnswers, onSubmit, error }) {
   const set = (id, val) => setAnswers(prev => ({ ...prev, [id]: val }));
-  const isComplete = !!(answers.destination && answers.tripType && answers.dates?.start && answers.dates?.end && Object.values(answers.travellers || {}).reduce((a,b) => a+b, 0) >= 1 && answers.budget?.max > answers.budget?.min && answers.pace && (answers.interests || []).length > 0);
+  const isComplete = !!(answers.destination && answers.tripType && answers.dates?.start && answers.dates?.end && Object.values(answers.travellers || {}).reduce((a,b) => a+b, 0) >= 1 && answers.budget?.max > answers.budget?.min && answers.pace && answers.movement && (answers.interests || []).length > 0);
   const sectionStyle = { background: "#fff", borderRadius: 16, padding: "28px 24px", marginBottom: 16, border: "1.5px solid #e8edf5", boxShadow: "0 2px 12px rgba(0,53,128,0.06)" };
   const labelStyle = { fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 400, color: "#1a1a1a", marginBottom: 4, display: "block" };
   const hintStyle = { fontSize: 13, color: "#999", marginBottom: 16, display: "block", fontFamily: "'DM Sans', sans-serif" };
@@ -1046,12 +1111,32 @@ function ScrollQuiz({ answers, setAnswers, onSubmit, error }) {
         })()}
       </div>
       <div style={sectionStyle}>
-        <span style={labelStyle}>How do you like to travel?</span>
+        <span style={labelStyle}>How full do you like your days?</span>
         <span style={hintStyle}>This shapes how many activities we plan each day</span>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {[{ value: "packed", label: "Packed", sub: "2+ activities per day — full itinerary morning to night", dots: 5 }, { value: "balanced", label: "Balanced", sub: "1–2 activities per day with free time built in", dots: 4 }, { value: "relaxed", label: "Relaxed", sub: "1 activity per day, easy pace", dots: 3 }, { value: "every_few_days", label: "Every Few Days", sub: "1 activity every 2–3 days", dots: 2 }, { value: "spontaneous", label: "Spontaneous", sub: "1–2 planned activities for the whole trip", dots: 1 }, { value: "transport", label: "Transport & Accommodation Only", sub: "Flights and hotels only — no activities planned", dots: 0 }].map(opt => {
             const sel = answers.pace === opt.value;
             return <button key={opt.value} onClick={() => set("pace", opt.value)} style={{ padding: "13px 16px", borderRadius: 10, textAlign: "left", border: `1.5px solid ${sel ? "#003580" : "#e0e6f0"}`, background: sel ? "#eef3ff" : "#fafbff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, color: sel ? "#003580" : "#1a1a1a" }}>{opt.label} <span style={{ fontWeight: 300, color: sel ? "#003580" : "#888" }}>— {opt.sub}</span></div>
+              <div style={{ display: "flex", gap: 4 }}>{[1,2,3,4,5].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i <= opt.dots ? (sel ? "#003580" : "#1a1a1a") : (sel ? "rgba(0,53,128,0.15)" : "#dde2ef"), transition: "background 0.15s" }}/>)}</div>
+            </button>;
+          })}
+        </div>
+      </div>
+      <div style={sectionStyle}>
+        <span style={labelStyle}>How often do you want to move around?</span>
+        <span style={hintStyle}>How frequently you'll change location or base</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            { value: "every_day", label: "Every Day", sub: "New location each day — maximum variety", dots: 5 },
+            { value: "every_2_days", label: "Every 2 Days", sub: "Move every couple of days", dots: 4 },
+            { value: "every_3_days", label: "Every 3 Days", sub: "A few days in each place", dots: 3 },
+            { value: "every_4_days", label: "Every 4 Days", sub: "Mostly settled, occasional moves", dots: 2 },
+            { value: "every_5_days", label: "Every 5 Days", sub: "Spend most of the trip in one place", dots: 1 },
+            { value: "stay_put", label: "Stay Put", sub: "One base for the entire trip", dots: 0 },
+          ].map(opt => {
+            const sel = answers.movement === opt.value;
+            return <button key={opt.value} onClick={() => set("movement", opt.value)} style={{ padding: "13px 16px", borderRadius: 10, textAlign: "left", border: `1.5px solid ${sel ? "#003580" : "#e0e6f0"}`, background: sel ? "#eef3ff" : "#fafbff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, color: sel ? "#003580" : "#1a1a1a" }}>{opt.label} <span style={{ fontWeight: 300, color: sel ? "#003580" : "#888" }}>— {opt.sub}</span></div>
               <div style={{ display: "flex", gap: 4 }}>{[1,2,3,4,5].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i <= opt.dots ? (sel ? "#003580" : "#1a1a1a") : (sel ? "rgba(0,53,128,0.15)" : "#dde2ef"), transition: "background 0.15s" }}/>)}</div>
             </button>;
@@ -1088,7 +1173,7 @@ function RoamApp({ onItineraryReady, onBookNow }) {
     setScreen("loading"); setError(null);
     try {
       const dates = answers.dates?.start && answers.dates?.end ? `${answers.dates.start} to ${answers.dates.end}` : answers.dates;
-      const prompt = `Build a trip itinerary:\nDestination: ${answers.destination}\nTrip type: ${answers.tripType}\nDates: ${dates}\nTravellers: ${typeof answers.travellers === "object" ? Object.entries(answers.travellers).filter(([,v]) => v > 0).map(([k,v]) => `${v} ${k}`).join(", ") : answers.travellers}\nBudget: ${typeof answers.budget === "object" ? `£${answers.budget.min?.toLocaleString()} – £${answers.budget.max >= 10000 ? "10,000+" : answers.budget.max?.toLocaleString()}` : answers.budget}\nPace: ${answers.pace}\nInterests: ${(answers.interests || []).join(", ")}`;
+      const prompt = `Build a trip itinerary:\nDestination: ${answers.destination}\nTrip type: ${answers.tripType}\nDates: ${dates}\nTravellers: ${typeof answers.travellers === "object" ? Object.entries(answers.travellers).filter(([,v]) => v > 0).map(([k,v]) => `${v} ${k}`).join(", ") : answers.travellers}\nBudget: ${typeof answers.budget === "object" ? `£${answers.budget.min?.toLocaleString()} – £${answers.budget.max >= 10000 ? "10,000+" : answers.budget.max?.toLocaleString()}` : answers.budget}\nPace: ${answers.pace}\nMovement frequency: ${answers.movement}\nInterests: ${(answers.interests || []).join(", ")}`;
       const raw = await callClaude(ITINERARY_SYSTEM, prompt, 4000);
       let clean = raw.trim().replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
       const start = clean.indexOf("{"), end = clean.lastIndexOf("}");
@@ -1227,7 +1312,7 @@ function PageShell({ onHome, user, onSignIn, onSignUp, onBookings, onSignOut, on
       <nav style={{ padding: "12px 5vw", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.97)", backdropFilter: "blur(12px)", borderBottom: "2px solid rgba(0,53,128,0.1)", position: "sticky", top: 0, zIndex: 100, width: "100%" }}>
         <div style={{ cursor: "pointer" }} onClick={onHome}><TripDoneLogo/></div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button onClick={onHome} style={{ padding: "9px 20px", borderRadius: 6, background: "transparent", border: "1.5px solid #003580", color: "#003580", fontSize: 13.5, fontWeight: 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>← Home</button>
+          <button onClick={onHome} className="nav-home-btn" style={{ padding: "9px 20px", borderRadius: 6, background: "transparent", border: "1.5px solid #003580", color: "#003580", fontSize: 13.5, fontWeight: 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>← Home</button>
           <AccountDropdown user={user} onSignIn={onSignIn} onSignUp={onSignUp} onBookings={onBookings} onSignOut={onSignOut} onPage={onPage} onSettings={onSettings} onTrips={onTrips}/>
         </div>
       </nav>
@@ -1747,7 +1832,7 @@ export default function RoamHomepage() {
         <nav style={{ padding: "12px 5vw", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.97)", backdropFilter: "blur(12px)", borderBottom: "2px solid rgba(0,53,128,0.1)", position: "sticky", top: 0, zIndex: 100, width: "100%" }}>
           <div style={{ cursor: "pointer" }} onClick={goHome}><TripDoneLogo/></div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <button onClick={goHome} style={{ padding: "9px 22px", borderRadius: 6, background: "transparent", border: "1.5px solid #003580", color: "#003580", fontSize: 13.5, fontWeight: 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>← Home</button>
+            <button onClick={goHome} className="nav-home-btn" style={{ padding: "9px 22px", borderRadius: 6, background: "transparent", border: "1.5px solid #003580", color: "#003580", fontSize: 13.5, fontWeight: 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>← Home</button>
             <AccountDropdown {...sharedProps}/>
           </div>
         </nav>
@@ -1778,6 +1863,7 @@ export default function RoamHomepage() {
         .example-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .packing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .nav-plan-btn { display: inline-flex; }
+        .nav-home-btn { display: inline-flex; }
         @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 700px) {
           .steps-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -1786,6 +1872,8 @@ export default function RoamHomepage() {
         @media (max-width: 600px) {
           .footer-grid { grid-template-columns: 1fr; }
           .nav-plan-btn { display: none !important; }
+          .nav-home-btn { display: none !important; }
+          .hero-h1 { white-space: normal !important; font-size: clamp(28px, 8vw, 48px) !important; }
           .audience-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .audience-grid .audience-card { height: 140px !important; border-radius: 12px !important; }
           .steps-grid { grid-template-columns: 1fr; gap: 12px; }
@@ -1810,18 +1898,18 @@ export default function RoamHomepage() {
       <div style={{ minHeight: "100vh", background: "#ffffff", display: "flex", flexDirection: "column", overflow: "hidden", width: "100%" }}>
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", textAlign: "center", padding: "100px 6vw 20px" }}>
-            <p style={{ fontSize: "clamp(13px, 1.8vw, 22px)", letterSpacing: "0.25em", textTransform: "uppercase", color: "#003580", marginBottom: 16, fontWeight: 600 }}>AI-Powered Travel Agent</p>
-            <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(44px, 7vw, 100px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.05, marginBottom: 20 }}>Your Perfect Trip,<br/><span style={{ color: "#003580", fontWeight: 600 }}>Planned For You.</span></h1>
-            <p style={{ fontSize: "clamp(15px, 1.5vw, 20px)", color: "#666", maxWidth: 560, margin: "0 auto 12px", lineHeight: 1.7, fontWeight: 300 }}>Tell us where you want to go and what you love. We'll handle everything else.</p>
-            <p style={{ fontSize: "clamp(12px, 1.2vw, 15px)", color: "#003580", maxWidth: 560, margin: "0 auto 32px", fontWeight: 500, letterSpacing: "0.05em" }}>All your favourite travel sites — in one place. Free forever.</p>
+            <p style={{ fontSize: "clamp(14px, 1.8vw, 22px)", letterSpacing: "0.25em", textTransform: "uppercase", color: "#003580", marginBottom: 16, fontWeight: 600 }}>AI-Powered Travel Agent</p>
+            <h1 className="hero-h1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(34px, 4.5vw, 68px)", fontWeight: 300, color: "#1a1a1a", lineHeight: 1.15, marginBottom: 24, whiteSpace: "nowrap" }}>Your Perfect Trip, <span style={{ color: "#003580", fontWeight: 600 }}>Planned For You.</span></h1>
+            <p style={{ fontSize: "clamp(17px, 1.6vw, 22px)", color: "#666", maxWidth: 600, margin: "0 auto 14px", lineHeight: 1.7, fontWeight: 300 }}>Tell us where you want to go and what you love. We'll handle everything else.</p>
+            <p style={{ fontSize: "clamp(15px, 1.4vw, 18px)", color: "#003580", maxWidth: 580, margin: "0 auto 36px", fontWeight: 600, letterSpacing: "0.03em" }}>All your favourite travel sites — in one place. Free forever.</p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <button onClick={setShowApp} style={{ padding: "15px 36px", borderRadius: 6, background: "#003580", border: "none", color: "#fff", fontSize: 16, fontWeight: 500, cursor: "pointer", boxShadow: "0 8px 32px rgba(0,53,128,0.3)" }}>Plan My Trip For Free →</button>
               <button onClick={() => setPage("howItWorks")} style={{ padding: "15px 36px", borderRadius: 6, background: "transparent", border: "1.5px solid #003580", color: "#003580", fontSize: 16, fontWeight: 400, cursor: "pointer" }}>See How It Works</button>
             </div>
           </div>
         </div>
-        {/* Ticker */}
-        <div style={{ background: "#003580", padding: "14px 0", overflow: "hidden" }}>
+        {/* Ticker — pinned to bottom of hero viewport */}
+        <div style={{ position: "sticky", bottom: 0, background: "#003580", padding: "14px 0", overflow: "hidden", zIndex: 10 }}>
           <div style={{ overflow: "hidden", position: "relative" }}>
             <div style={{ display: "flex", animation: "ticker 20s linear infinite", whiteSpace: "nowrap", width: "max-content" }}>
               {[...PLATFORMS, ...PLATFORMS, ...PLATFORMS, ...PLATFORMS].map((p, i) => <span key={i} style={{ fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7ab8e8", padding: "0 24px", display: "inline-block" }}>{p} <span style={{ color: "#4a90c4" }}>◆</span></span>)}
@@ -1899,45 +1987,69 @@ export default function RoamHomepage() {
             <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 300, color: "#1a1a1a", textAlign: "center", marginBottom: 52 }}>A real TripDone itinerary</h2>
           </FadeIn>
           <FadeIn delay={0.05}>
-            <div style={{ background: "#1a1a1a", borderRadius: 14, padding: "24px 28px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 6 }}>📍 Tokyo & Kyoto, Japan · 7 days · Recommended stay</div>
-                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, color: "#fff" }}>{EXAMPLE.hotel.name}</div>
-                <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>{EXAMPLE.hotel.area}</div>
+            <div style={{ background: "#1a1a1a", borderRadius: 14, padding: "24px 28px", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+              <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 10 }}>📍 {EXAMPLE.destination} · {EXAMPLE.duration}</div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {EXAMPLE.locations.map((loc, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.07)", borderRadius: 10, padding: "10px 16px", flexShrink: 0 }}>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>📍 {loc.location} · {loc.nights} nights</div>
+                    <div style={{ fontSize: 14, color: "#fff", fontWeight: 500 }}>{loc.hotel.name}</div>
+                    <div style={{ fontSize: 12, color: "#0ea5e9", marginTop: 3 }}>{loc.hotel.priceRange}</div>
+                  </div>
+                ))}
               </div>
-              <div style={{ background: "rgba(14,165,233,0.15)", borderRadius: 8, padding: "8px 18px", fontSize: 15, color: "#0ea5e9", fontWeight: 600, whiteSpace: "nowrap" }}>{EXAMPLE.hotel.priceRange}</div>
             </div>
           </FadeIn>
           <div className="example-grid">
             {EXAMPLE.days.map((day, i) => (
-              <FadeIn key={day.range} delay={i * 0.1}>
+              <FadeIn key={day.day} delay={i * 0.1}>
                 <div style={{ border: "1.5px solid #e0e6f0", borderRadius: 14, padding: "22px 24px", background: "#fff", height: "100%", display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                    <div style={{ background: "#003580", color: "#fff", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>{day.range}</div>
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 17, color: "#1a1a1a" }}>{day.theme}</div>
+                  {/* Header */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#003580", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, flexShrink: 0 }}>{day.day}</div>
+                    {day.isTravel && <span style={{ fontSize: 10, background: "#003580", color: "#fff", borderRadius: 4, padding: "2px 7px", fontWeight: 600, letterSpacing: "0.05em" }}>TRAVEL DAY</span>}
+                    <span style={{ fontSize: 11, color: "#003580", fontWeight: 500 }}>📍 {day.location}</span>
+                    <div style={{ fontSize: 13, color: "#888", width: "100%", marginTop: 2 }}>{day.isTravel ? `${day.travelFrom} → ${day.travelTo}` : day.theme}</div>
                   </div>
-                  {day.checkin && (
-                    <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "flex-start", background: "#f8f9ff", borderRadius: 8, padding: "8px 10px", border: "1px solid #e8edf5" }}>
-                      <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🏨</span>
-                      <span style={{ fontSize: 12.5, color: "#003580", lineHeight: 1.5, fontWeight: 500 }}>{day.checkin}</span>
+                  {/* Travel banner */}
+                  {day.isTravel && (
+                    <div style={{ background: "#eef3ff", borderRadius: 8, padding: "10px 12px", marginBottom: 12, border: "1.5px solid #c7d9f5", display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 18 }}>🚄</span>
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: "#003580" }}>{day.travelFrom} → {day.travelTo}</div>
+                        <div style={{ fontSize: 11.5, color: "#4a72b0" }}>{day.travelMethod} · {day.travelDuration}</div>
+                      </div>
                     </div>
                   )}
+                  {/* Check-in */}
+                  {day.checkin && (
+                    <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "flex-start", background: "#f8f9ff", borderRadius: 8, padding: "8px 10px", border: "1px solid #e8edf5" }}>
+                      <span style={{ fontSize: 13, flexShrink: 0 }}>🏨</span>
+                      <span style={{ fontSize: 12, color: "#003580", lineHeight: 1.5, fontWeight: 500 }}>{day.checkin}</span>
+                    </div>
+                  )}
+                  {/* Time slots — only show afternoon + evening on travel days to keep card height consistent */}
                   <div style={{ flex: 1 }}>
-                    {[{ icon: "☀️", val: day.morning }, { icon: "⛅", val: day.afternoon }, { icon: "🌙", val: day.evening }].map((item, j) => (
-                      <div key={j} style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "flex-start" }}>
-                        <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
-                        <span style={{ fontSize: 13, color: "#444", lineHeight: 1.5 }}>{item.val}</span>
+                    {(day.isTravel
+                      ? [{ icon: "⛅", val: day.afternoon }, { icon: "🌙", val: day.evening }]
+                      : [{ icon: "☀️", val: day.morning }, { icon: "⛅", val: day.afternoon }, { icon: "🌙", val: day.evening }]
+                    ).map((item, j) => (
+                      <div key={j} style={{ display: "flex", gap: 8, marginBottom: 9, alignItems: "flex-start" }}>
+                        <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
+                        <span style={{ fontSize: 12.5, color: "#444", lineHeight: 1.5 }}>{item.val}</span>
                       </div>
                     ))}
                   </div>
+                  {/* Transport */}
                   {day.transport && (
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-start", margin: "10px 0", padding: "8px 10px", background: "#fff8ee", borderRadius: 8, border: "1px solid #f0e0c0" }}>
                       <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🚌</span>
                       <span style={{ fontSize: 12, color: "#7a5010", lineHeight: 1.5 }}>{day.transport}</span>
                     </div>
                   )}
-                  <div style={{ marginTop: 10, padding: "10px 14px", background: "#eef3ff", borderRadius: 8, borderLeft: "3px solid #003580" }}>
-                    <span style={{ fontSize: 12, color: "#003580", lineHeight: 1.5 }}>✦ {day.insiderTip}</span>
+                  {/* Insider tip */}
+                  <div style={{ marginTop: 10, padding: "10px 12px", background: "#eef3ff", borderRadius: 8, borderLeft: "3px solid #003580" }}>
+                    <span style={{ fontSize: 11.5, color: "#003580", lineHeight: 1.5 }}>✦ {day.insiderTip}</span>
                   </div>
                 </div>
               </FadeIn>
