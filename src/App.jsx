@@ -712,7 +712,7 @@ function RoamApp({ onItineraryReady, onBookNow }) {
     try {
       const dates = answers.dates?.start && answers.dates?.end ? `${answers.dates.start} to ${answers.dates.end}` : answers.dates;
       const prompt = `Build a trip itinerary:\nDestination: ${answers.destination}\nTrip type: ${answers.tripType}\nDates: ${dates}\nTravellers: ${typeof answers.travellers === "object" ? Object.entries(answers.travellers).filter(([,v]) => v > 0).map(([k,v]) => `${v} ${k}`).join(", ") : answers.travellers}\nBudget: ${typeof answers.budget === "object" ? `£${answers.budget.min?.toLocaleString()} – £${answers.budget.max >= 10000 ? "10,000+" : answers.budget.max?.toLocaleString()}` : answers.budget}\nPace: ${answers.pace}\nInterests: ${(answers.interests || []).join(", ")}`;
-      const raw = await callClaude(ITINERARY_SYSTEM, prompt, 2000);
+      const raw = await callClaude(ITINERARY_SYSTEM, prompt, 4000);
       let clean = raw.trim().replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
       const start = clean.indexOf("{"), end = clean.lastIndexOf("}");
       if (start === -1 || end === -1) throw new Error("No JSON found");
