@@ -1908,7 +1908,8 @@ export default function RoamHomepage() {
               <div style={{ background: "rgba(14,165,233,0.15)", borderRadius: 8, padding: "8px 18px", fontSize: 15, color: "#0ea5e9", fontWeight: 600, whiteSpace: "nowrap" }}>{EXAMPLE.hotel.priceRange}</div>
             </div>
           </FadeIn>
-          <div className="example-grid">((day, i) => (
+          <div className="example-grid">
+            {EXAMPLE.days.map((day, i) => (
               <FadeIn key={day.range} delay={i * 0.1}>
                 <div style={{ border: "1.5px solid #e0e6f0", borderRadius: 14, padding: "22px 24px", background: "#fff", height: "100%", display: "flex", flexDirection: "column" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
