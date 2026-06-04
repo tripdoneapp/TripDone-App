@@ -6,7 +6,7 @@ const AUDIENCE_DATA = [
   { label: "Business Travel", desc: "Seamless trips that keep you productive and comfortable — every time.", photo: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=80" },
   { label: "Family Holidays", desc: "Itineraries that work for every age. Kids, pensioners, and everyone between.", photo: "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=600&q=80" },
   { label: "Couples & Romance", desc: "Anniversary trips, honeymoons, weekend escapes — curated with care.", photo: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80" },
-  { label: "Adventure & Exploration", desc: "Off the beaten path, fully planned. All the thrill, none of the admin.", photo: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80" },
+  { label: "Adventure & Exploration", desc: "Off the beaten pathA, fully planned. All the thrill, none of the admin.", photo: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80" },
   { label: "Education", desc: "Language schools, study trips, and learning experiences around the world.", photo: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80" },
   { label: "Culture", desc: "Museums, local traditions, historic sites — travel that broadens the mind.", photo: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&q=80" },
 ];
@@ -153,14 +153,31 @@ Return ONLY valid JSON, no markdown, no explanation. Format:
     {
       "location": "e.g. Tokyo",
       "nights": 2,
-      "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £75/night" },
+      "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £75/night", "bookingUrl": "https://www.booking.com/hotel/..." },
       "alternatives": {
-        "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £18/night", "note": "1 sentence" },
-        "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £220/night", "note": "1 sentence" }
+        "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £18/night", "note": "1 sentence", "bookingUrl": "https://www.hostelworld.com/..." },
+        "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £220/night", "note": "1 sentence", "bookingUrl": "https://www.booking.com/hotel/..." }
       }
     }
   ],
-  "days": [{ "day": 1, "location": "e.g. Tokyo", "theme": "string", "isTravel": false, "travelFrom": null, "travelTo": null, "travelMethod": null, "travelDuration": null, "morning": "string", "afternoon": "string", "evening": "string", "transport": "string", "insiderTip": "string" }],
+  "days": [{
+    "day": 1,
+    "location": "e.g. Tokyo",
+    "theme": "string",
+    "isTravel": false,
+    "travelFrom": null,
+    "travelTo": null,
+    "travelMethod": null,
+    "travelDuration": null,
+    "morning": "string",
+    "afternoon": "string",
+    "evening": "string",
+    "transport": "string",
+    "insiderTip": "string",
+    "bookables": [
+      { "name": "string", "type": "activity|hostel|hotel|transport", "platform": "GetYourGuide|Booking.com|Hostelworld|Viator", "price": "e.g. £25/person", "url": "https://..." }
+    ]
+  }],
   "practicalInfo": { "bestTransport": "string", "mustBook": "string", "packingTip": "string" },
   "packingList": { "essentials": ["item1","item2"], "clothing": ["item1","item2"], "extras": ["item1","item2"] },
   "helpfulLinks": [
@@ -168,24 +185,32 @@ Return ONLY valid JSON, no markdown, no explanation. Format:
   ]
 }
 
+BOOKABLES RULES — follow these exactly:
+- Include 2-4 bookable items per day covering the main activities mentioned.
+- For activities: link to GetYourGuide or Viator search for that specific activity e.g. https://www.getyourguide.com/s/?q=TeamLab+Planets+Tokyo&partner_id=5566445
+- For hostels: link to Hostelworld search e.g. https://www.hostelworld.com/search?search_keywords=Wise+Owl+Hostel+Tokyo
+- For hotels: link to Booking.com search for that specific property e.g. https://www.booking.com/searchresults.html?ss=Park+Hyatt+Tokyo&aid=4297311
+- For transport (Shinkansen etc): link to relevant booking site
+- Only include bookables for activities explicitly mentioned in that day's morning/afternoon/evening.
+- On travel days, include a bookable for the transport (train/bus/ferry booking).
+- price should be approximate per person where possible.
+
 MOVEMENT & LOCATION RULES — follow these exactly:
 - Use the "Movement frequency" value to determine how many nights to spend in each location.
 - every_day = 1 night per location. every_2_days = 2 nights. every_3_days = 3 nights. every_4_days = 4 nights. every_5_days = 5 nights. stay_put = entire trip in one location.
-- Calculate the number of locations from trip duration divided by nights per location. e.g. 14 days / every 2 days = 7 locations.
-- Day trips from a base city (e.g. day trip to Nara from Osaka) do NOT count as a new location — no new hotel needed. Use your judgment for what is a genuine overnight move vs a day trip.
-- For travel days (when moving between locations): set "isTravel": true, "travelFrom": "City A", "travelTo": "City B", "travelMethod": "e.g. Shinkansen", "travelDuration": "e.g. 2h 15min". Still fill in afternoon and evening for what they can do after arriving. Morning should describe the journey.
+- Calculate the number of locations from trip duration divided by nights per location.
+- Day trips from a base city do NOT count as a new location.
+- For travel days: set "isTravel": true, fill travelFrom, travelTo, travelMethod, travelDuration. Still fill afternoon and evening.
 - Each location in "locations" array must have its own hotel recommendation.
 
 HOTEL TIER RULES — follow these exactly:
-- "hotel" (recommended): A real, highly-rated hotel or guesthouse with excellent reviews, priced £50-£100/night. Specific real name required.
-- "alternatives.budget": The best-reviewed hostel in that specific location on Hostelworld or Booking.com. Must be a hostel. Under £30/night dorm or £50/night private. Specific real name required.
-- "alternatives.luxury": A real 5-star hotel or luxury resort in that location, £150+/night. Specific real name required.
+- "hotel" (recommended): Real, highly-rated hotel £50-£100/night. Specific real name required.
+- "alternatives.budget": Best-reviewed hostel in that location. Must be a hostel. Under £30/night dorm. Specific real name required.
+- "alternatives.luxury": Real 5-star hotel £150+/night. Specific real name required.
 
 HELPFUL LINKS RULES:
-- Include 5-7 links. Editorial articles and travel guides only — NO booking sites.
-- Good sources: Lonely Planet, Culture Trip, Time Out, BBC Travel, National Geographic, The Guardian Travel, Condé Nast Traveller, local tourism boards.
-- Mix: things to do, food guides, culture/history, practical tips, neighbourhood guides.
-- Use real URLs (e.g. lonelyplanet.com/japan/tokyo).
+- Include 5-7 editorial articles only — NO booking sites.
+- Sources: Lonely Planet, Culture Trip, Time Out, BBC Travel, National Geographic, Guardian Travel, Condé Nast.
 
 Generate the correct number of days based on trip dates. Be specific with real place names. Make it feel curated, not generic.`;
 
@@ -346,6 +371,24 @@ function DayCard({ day, index }) {
             <div style={{ background: "#eef3ff", borderRadius: 8, padding: "10px 14px", borderLeft: "3px solid #003580", marginTop: 16 }}>
               <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", fontFamily: "'DM Sans', sans-serif", marginBottom: 3 }}>✦ Insider tip</div>
               <div style={{ fontSize: 13.5, color: "#003580", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>{day.insiderTip}</div>
+            </div>
+          )}
+          {day.bookables && day.bookables.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 10 }}>🎟 Book for this day</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {day.bookables.map((b, i) => (
+                  <a key={i} href={b.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #e0e6f0", background: "#f8f9ff", transition: "border-color 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = "#003580"}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = "#e0e6f0"}>
+                    <div>
+                      <div style={{ fontSize: 13.5, fontWeight: 500, color: "#1a1a1a", fontFamily: "'DM Sans', sans-serif" }}>{b.name}</div>
+                      <div style={{ fontSize: 11.5, color: "#888", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>{b.platform}{b.price ? ` · ${b.price}` : ""}</div>
+                    </div>
+                    <div style={{ background: "#003580", color: "#fff", borderRadius: 6, padding: "5px 12px", fontSize: 12, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap", marginLeft: 10 }}>Book →</div>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -1165,7 +1208,7 @@ function RoamApp({ onItineraryReady, onBookNow }) {
       const data = JSON.parse(clean.slice(start, end + 1));
       setItinerary(data);
       setActiveTrip(null);
-      if (onItineraryReady) onItineraryReady(data);
+      if (onItineraryReady) onItineraryReady(data, answers);
       setScreen("itinerary");
     } catch (err) {
       console.error(err); setError("Something went wrong. Please try again."); setScreen("quiz");
@@ -1437,17 +1480,25 @@ function SettingsPage({ user, onClose, onSignOut }) {
 }
 
 // ─── Booking Page (with pre-filled deep links) ────────────────────────────────
-function BookingPage({ itinerary, onBack, onHome }) {
+function BookingPage({ itinerary, answers, onBack, onHome }) {
   const [activeSection, setActiveSection] = useState("overview");
   const [activeDay, setActiveDay] = useState(0);
   const dest = encodeURIComponent(itinerary?.destination || "");
+  const checkin = answers?.dates?.start || "";
+  const checkout = answers?.dates?.end || "";
+  const adults = (answers?.travellers?.adults || 0) + (answers?.travellers?.pensioners || 0) || 2;
+  const children = answers?.travellers?.children || 0;
+
   const bookingLinks = [
-    { label: "Flights", platform: "Skyscanner", color: "#003580", desc: `Flights to ${itinerary?.destination || "your destination"}`, href: `https://www.skyscanner.net/transport/flights/?query=${dest}` },
-    { label: "Hotels", platform: "Booking.com", color: "#003276", desc: itinerary?.hotel?.name ? `Search for ${itinerary.hotel.name}` : "Find your perfect stay", href: `https://www.booking.com/searchresults.html?ss=${dest}` },
-    { label: "Activities", platform: "GetYourGuide", color: "#FF5533", desc: "Tours, experiences and day trips", href: `https://www.getyourguide.com/s/?q=${dest}` },
-    { label: "Transfers", platform: "Trip.com", color: "#0086F6", desc: "Airport transfers and car hire", href: `https://www.trip.com/search/?query=${dest}` },
-    { label: "Vacation rentals", platform: "Airbnb", color: "#FF5A5F", desc: "Apartments, villas and unique stays", href: `https://www.airbnb.com/s/${dest}/homes` },
-    { label: "Experiences", platform: "Viator", color: "#29333F", desc: "Award-winning tours and experiences", href: `https://www.viator.com/search/${dest}` },
+    { label: "Hotels", platform: "Booking.com", color: "#003276", desc: itinerary?.hotel?.name ? `Search for ${itinerary.hotel.name}` : "Find your perfect stay", href: `https://www.booking.com/searchresults.html?ss=${dest}&checkin=${checkin}&checkout=${checkout}&group_adults=${adults}&group_children=${children}&aid=4297311` },
+    { label: "Flights", platform: "Kiwi.com", color: "#00A991", desc: `Search flights to ${itinerary?.destination || "your destination"}`, href: `https://www.kiwi.com/en/search/results/anywhere/${dest}/${checkin}/${checkout}?affilid=4766423` },
+    { label: "Flights & Hotels", platform: "Expedia UK", color: "#FFC72C", desc: "Compare flights and hotels together", href: `https://www.expedia.co.uk/Hotels-Search?destination=${dest}&startDate=${checkin}&endDate=${checkout}&adults=${adults}&affcid=5288967` },
+    { label: "Flights", platform: "Momondo", color: "#6B0099", desc: `Find the cheapest flights to ${itinerary?.destination || "your destination"}`, href: `https://www.momondo.co.uk/flight-search/anywhere-${dest}/${checkin}/${checkout}?affiliate=5144959` },
+    { label: "Activities", platform: "GetYourGuide", color: "#FF5533", desc: "Tours, experiences and day trips", href: `https://www.getyourguide.com/s/?q=${dest}&date_from=${checkin}&date_to=${checkout}&partner_id=5566445` },
+    { label: "Flights & Hotels", platform: "Mytrip", color: "#1a1a6e", desc: "Compare flights and hotels in one place", href: `https://www.mytrip.com/flights/?destination=${dest}&departureDate=${checkin}&cjsid=7122258` },
+    { label: "Transfers & Hotels", platform: "Trip.com", color: "#0086F6", desc: "Airport transfers, hotels and car hire", href: `https://www.trip.com/search/?query=${dest}&checkin=${checkin}&checkout=${checkout}&Allianceid=4368684` },
+    { label: "Travel Insurance", platform: "World Nomads", color: "#E8463A", desc: "Travel insurance for adventurous travellers", href: `https://www.worldnomads.com/travel-insurance/?affiliate=6159036` },
+    { label: "Vacation rentals", platform: "Airbnb", color: "#FF5A5F", desc: "Apartments, villas and unique stays", href: `https://www.airbnb.com/s/${dest}/homes?checkin=${checkin}&checkout=${checkout}&adults=${adults}` },
   ];
   const sections = [{ id: "overview", label: "Overview" }, { id: "days", label: "Day by Day" }, { id: "stay", label: "Where to Stay" }, { id: "book", label: "Book It" }];
   return (
@@ -1542,7 +1593,7 @@ function BookingPage({ itinerary, onBack, onHome }) {
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6, marginBottom: 20 }}>{itinerary?.hotel?.description}</div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                 <span style={{ fontSize: 22, color: "#0ea5e9", fontWeight: 600 }}>{itinerary?.hotel?.priceRange}</span>
-                <a href={`https://www.booking.com/searchresults.html?ss=${dest}`} target="_blank" rel="noopener noreferrer" style={{ padding: "12px 28px", borderRadius: 8, background: "#0ea5e9", color: "#fff", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Search on Booking.com →</a>
+                <a href={`https://www.booking.com/searchresults.html?ss=${dest}&aid=4297311`} target="_blank" rel="noopener noreferrer" style={{ padding: "12px 28px", borderRadius: 8, background: "#0ea5e9", color: "#fff", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Search on Booking.com →</a>
               </div>
             </div>
             {itinerary?.alternatives && (
@@ -1785,6 +1836,7 @@ export default function RoamHomepage() {
   const [user, setUser] = useState(null);
   const [authModal, setAuthModal] = useState(null);
   const [itinerary, setItinerary] = useState(null);
+  const [answers, setAnswers] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [showTrips, setShowTrips] = useState(false);
 
@@ -1807,7 +1859,7 @@ export default function RoamHomepage() {
   if (page === "destinations") return <DestinationsPage {...sharedProps} onPlan={() => setPage("app")}/>;
   if (page === "blog") return <BlogPage {...sharedProps}/>;
   if (page === "help") return <HelpPage {...sharedProps}/>;
-  if (page === "booking") return <BookingPage itinerary={itinerary} onBack={() => setPage("app")} onHome={goHome}/>;
+  if (page === "booking") return <BookingPage itinerary={itinerary} answers={answers} onBack={() => setPage("app")} onHome={goHome}/>;
 
   if (page === "app") {
     return (
@@ -1820,7 +1872,7 @@ export default function RoamHomepage() {
             <AccountDropdown {...sharedProps}/>
           </div>
         </nav>
-        <RoamApp onItineraryReady={itin => setItinerary(itin)} onBookNow={() => setPage("booking")}/>
+        <RoamApp onItineraryReady={(itin, ans) => { setItinerary(itin); setAnswers(ans); }} onBookNow={() => setPage("booking")}/>
       </div>
     );
   }
