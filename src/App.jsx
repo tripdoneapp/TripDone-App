@@ -6,7 +6,7 @@ const AUDIENCE_DATA = [
   { label: "Business Travel", desc: "Seamless trips that keep you productive and comfortable — every time.", photo: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=80" },
   { label: "Family Holidays", desc: "Itineraries that work for every age. Kids, pensioners, and everyone between.", photo: "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=600&q=80" },
   { label: "Couples & Romance", desc: "Anniversary trips, honeymoons, weekend escapes — curated with care.", photo: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80" },
-  { label: "Adventure & Exploration", desc: "Off the beaten pathA, fully planned. All the thrill, none of the admin.", photo: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80" },
+  { label: "Adventure & Exploration", desc: "Off the beaten path, fully planned. All the thrill, none of the admin.", photo: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80" },
   { label: "Education", desc: "Language schools, study trips, and learning experiences around the world.", photo: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80" },
   { label: "Culture", desc: "Museums, local traditions, historic sites — travel that broadens the mind.", photo: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&q=80" },
 ];
@@ -91,11 +91,11 @@ function PlaneOutline({ color = "#0ea5e9", size = 28 }) {
 }
 
 function TripDoneLogo() {
-  return <img src="/logo.png" alt="TripDone" style={{ height: 56, width: "auto", flexShrink: 0, display: "block" }}/>;
+  return <img src="/logo.png" alt="TripDone" style={{ height: 70, width: "auto", flexShrink: 0, display: "block" }}/>;
 }
 
 function TripDoneLogoDark() {
-  return <img src="/logo.png" alt="TripDone" style={{ height: 56, width: "auto", flexShrink: 0, display: "block", filter: "brightness(0) invert(1)" }}/>;
+  return <img src="/logo.png" alt="TripDone" style={{ height: 70, width: "auto", flexShrink: 0, display: "block", filter: "brightness(0) invert(1)" }}/>;
 }
 
 function useInView(ref) {
@@ -330,9 +330,23 @@ function LoadingScreen({ destination }) {
 }
 
 // ─── Day Card ─────────────────────────────────────────────────────────────────
-function DayCard({ day, index }) {
+function DayCard({ day, index, locations = [] }) {
   const [open, setOpen] = useState(index === 0);
+  const [accomTier, setAccomTier] = useState("recommended");
   const isTravel = day.isTravel;
+
+  // Find if this is a check-in night for a new location
+  const loc = locations.find(l => l.location === day.location);
+  const isCheckIn = loc && (index === 0 || (locations.length > 0 && day.location !== undefined));
+  
+  // Find previous day's location to detect actual check-in
+  const tiers = loc ? {
+    budget: loc.alternatives?.budget,
+    recommended: loc.hotel,
+    luxury: loc.alternatives?.luxury,
+  } : null;
+  const currentAccom = tiers ? (tiers[accomTier] || tiers.recommended) : null;
+  const showAccom = (day.checkin || isTravel) && currentAccom;
   return (
     <div style={{ border: `1.5px solid ${isTravel ? "#fde8cc" : "#e8e2d9"}`, borderRadius: 14, overflow: "hidden", marginBottom: 12, background: isTravel ? "#fffaf5" : "#fdfbf8", boxShadow: open ? "0 4px 20px rgba(0,0,0,0.06)" : "none", transition: "box-shadow 0.2s" }}>
       <button onClick={() => setOpen(!open)} style={{ width: "100%", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
@@ -353,11 +367,37 @@ function DayCard({ day, index }) {
         <div style={{ padding: "0 20px 20px" }}>
           <div style={{ height: 1, background: isTravel ? "#fde8cc" : "#e8e2d9", marginBottom: 16 }}/>
           {isTravel && day.travelFrom && (
-            <div style={{ background: "#fff8ee", borderRadius: 10, padding: "12px 14px", marginBottom: 16, border: "1.5px solid #fde8cc", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ background: "#eef3ff", borderRadius: 10, padding: "12px 14px", marginBottom: 16, border: "1.5px solid #c7d9f5", display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ fontSize: 22 }}>🚄</div>
               <div>
-                <div style={{ fontSize: 13, fontFamily: "'DM Sans', sans-serif", fontWeight: 600, color: "#92400e" }}>{day.travelFrom} → {day.travelTo}</div>
-                <div style={{ fontSize: 12.5, fontFamily: "'DM Sans', sans-serif", color: "#b45309" }}>{day.travelMethod} · {day.travelDuration}</div>
+                <div style={{ fontSize: 13, fontFamily: "'DM Sans', sans-serif", fontWeight: 600, color: "#003580" }}>{day.travelFrom} → {day.travelTo}</div>
+                <div style={{ fontSize: 12.5, fontFamily: "'DM Sans', sans-serif", color: "#4a72b0" }}>{day.travelMethod} · {day.travelDuration}</div>
+              </div>
+            </div>
+          )}
+          {/* Inline accommodation on check-in nights */}
+          {showAccom && (
+            <div style={{ background: "#f8f9ff", borderRadius: 10, padding: "14px 16px", marginBottom: 16, border: "1.5px solid #e0e6f0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#003580", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>🏨 Tonight's stay</div>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {["budget", "recommended", "luxury"].map(t => (
+                    tiers[t] && <button key={t} onClick={e => { e.stopPropagation(); setAccomTier(t); }} style={{ padding: "3px 10px", borderRadius: 20, border: `1.5px solid ${accomTier === t ? "#003580" : "#e0e6f0"}`, background: accomTier === t ? "#003580" : "transparent", color: accomTier === t ? "#fff" : "#888", fontSize: 10, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                      {t === "budget" ? "Hostel" : t === "recommended" ? "Hotel" : "Luxury"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", fontFamily: "'DM Sans', sans-serif", marginBottom: 2 }}>{currentAccom.name || currentAccom.hotel}</div>
+                  <div style={{ fontSize: 12, color: "#888", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>{currentAccom.area}</div>
+                  <div style={{ fontSize: 12.5, color: "#555", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4 }}>{currentAccom.description || currentAccom.note}</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, marginLeft: 12, flexShrink: 0 }}>
+                  <div style={{ background: "#eef3ff", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "#003580", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}>{currentAccom.priceRange}</div>
+                  <a href={currentAccom.bookingUrl || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(currentAccom.name || currentAccom.hotel)}&aid=4297311`} target="_blank" rel="noopener noreferrer" style={{ background: "#003580", color: "#fff", borderRadius: 6, padding: "5px 12px", fontSize: 11.5, fontWeight: 500, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}>Book →</a>
+                </div>
               </div>
             </div>
           )}
@@ -912,11 +952,128 @@ function TripTabs({ trips, activeId, onSelect, onNew, onRemove }) {
 }
 
 // ─── Itinerary View ───────────────────────────────────────────────────────────
+// ─── Trip Basket ──────────────────────────────────────────────────────────────
+function useTripBasket() {
+  const [items, setItems] = useState([]);
+  const add = (item) => setItems(prev => prev.find(i => i.id === item.id) ? prev : [...prev, item]);
+  const remove = (id) => setItems(prev => prev.filter(i => i.id !== id));
+  const has = (id) => items.some(i => i.id === id);
+  const total = items.reduce((sum, i) => sum + (parseFloat(i.rawPrice) || 0), 0);
+  return { items, add, remove, has, total };
+}
+
+// ─── Bookable Card ────────────────────────────────────────────────────────────
+const LOCATION_PHOTOS = {
+  default: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&q=80",
+  tokyo: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80",
+  kyoto: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&q=80",
+  osaka: "https://images.unsplash.com/photo-1590559899731-a382839e5549?w=400&q=80",
+  paris: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80",
+  london: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&q=80",
+  barcelona: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&q=80",
+  rome: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=80",
+  bali: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80",
+  bangkok: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=400&q=80",
+  dubai: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",
+  newyork: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80",
+  sydney: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=400&q=80",
+  amsterdam: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=400&q=80",
+  florence: "https://images.unsplash.com/photo-1543429258-e32c10c5f9e9?w=400&q=80",
+};
+
+function getLocationPhoto(location = "") {
+  const key = location.toLowerCase().replace(/[^a-z]/g, "");
+  for (const [k, url] of Object.entries(LOCATION_PHOTOS)) {
+    if (key.includes(k)) return url;
+  }
+  return LOCATION_PHOTOS.default;
+}
+
+function BookableCard({ item, basket }) {
+  const added = basket.has(item.id);
+  const photo = getLocationPhoto(item.location || item.name);
+  const typeIcon = { activity: "🎟", hotel: "🏨", hostel: "🏠", transport: "🚄", experience: "🎭" }[item.type] || "📍";
+
+  return (
+    <div style={{ borderRadius: 12, overflow: "hidden", border: `2px solid ${added ? "#003580" : "#e0e6f0"}`, background: "#fff", transition: "all 0.2s", boxShadow: added ? "0 4px 16px rgba(0,53,128,0.15)" : "none" }}>
+      {/* Photo */}
+      <div style={{ height: 140, overflow: "hidden", position: "relative" }}>
+        <img src={photo} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)" }}/>
+        <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", borderRadius: 6, padding: "3px 8px", fontSize: 11, color: "#fff", fontFamily: "'DM Sans', sans-serif" }}>{typeIcon} {item.type?.toUpperCase()}</div>
+        {item.price && <div style={{ position: "absolute", bottom: 10, right: 10, background: "#003580", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "#fff", fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{item.price}</div>}
+      </div>
+      {/* Details */}
+      <div style={{ padding: "12px 14px" }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", fontFamily: "'DM Sans', sans-serif", marginBottom: 3, lineHeight: 1.3 }}>{item.name}</div>
+        <div style={{ fontSize: 12, color: "#888", fontFamily: "'DM Sans', sans-serif", marginBottom: 10 }}>{item.platform}{item.location ? ` · ${item.location}` : ""}</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => added ? basket.remove(item.id) : basket.add(item)} style={{ flex: 1, padding: "8px", borderRadius: 8, border: `1.5px solid ${added ? "#003580" : "#e0e6f0"}`, background: added ? "#003580" : "transparent", color: added ? "#fff" : "#003580", fontSize: 12.5, fontWeight: 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s" }}>
+            {added ? "✓ Added" : "+ Add to trip"}
+          </button>
+          <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 14px", borderRadius: 8, border: "1.5px solid #e0e6f0", background: "transparent", color: "#555", fontSize: 12.5, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center" }}>View →</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Trip Basket Panel ────────────────────────────────────────────────────────
+function TripBasketPanel({ basket, itinerary, answers }) {
+  const [open, setOpen] = useState(false);
+  if (basket.items.length === 0) return null;
+
+  const dest = encodeURIComponent(itinerary?.destination || "");
+  const checkin = answers?.dates?.start || "";
+  const checkout = answers?.dates?.end || "";
+
+  return (
+    <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 500 }}>
+      {/* Basket toggle button */}
+      <button onClick={() => setOpen(!open)} style={{ background: "#003580", color: "#fff", border: "none", borderRadius: 50, padding: "14px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: "0 8px 24px rgba(0,53,128,0.4)", display: "flex", alignItems: "center", gap: 8 }}>
+        🧳 My Trip ({basket.items.length})
+        {basket.total > 0 && <span style={{ background: "#0ea5e9", borderRadius: 20, padding: "2px 8px", fontSize: 12 }}>~£{basket.total.toFixed(0)}</span>}
+      </button>
+
+      {/* Basket panel */}
+      {open && (
+        <div style={{ position: "absolute", bottom: 60, right: 0, width: 340, background: "#fff", borderRadius: 16, boxShadow: "0 16px 48px rgba(0,0,0,0.18)", border: "1.5px solid #e0e6f0", overflow: "hidden" }}>
+          <div style={{ padding: "16px 20px", background: "#003580", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: "#fff", fontFamily: "'DM Sans', sans-serif" }}>🧳 Your Trip Basket</span>
+            <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 18, cursor: "pointer" }}>✕</button>
+          </div>
+          <div style={{ maxHeight: 340, overflowY: "auto", padding: "12px 16px" }}>
+            {basket.items.map(item => (
+              <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f0f4ff" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 500, color: "#1a1a1a", fontFamily: "'DM Sans', sans-serif", marginBottom: 2 }}>{item.name}</div>
+                  <div style={{ fontSize: 11.5, color: "#888", fontFamily: "'DM Sans', sans-serif" }}>{item.platform} · {item.price || "Price on site"}</div>
+                </div>
+                <button onClick={() => basket.remove(item.id)} style={{ background: "none", border: "none", color: "#ccc", fontSize: 16, cursor: "pointer", marginLeft: 8, flexShrink: 0 }}>✕</button>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "14px 16px", borderTop: "1px solid #e0e6f0" }}>
+            {basket.total > 0 && <div style={{ fontSize: 13, color: "#888", fontFamily: "'DM Sans', sans-serif", marginBottom: 10 }}>Estimated total: <strong style={{ color: "#003580" }}>~£{basket.total.toFixed(0)}</strong> <span style={{ fontSize: 11 }}>(excl. flights)</span></div>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <a href={`https://www.booking.com/searchresults.html?ss=${dest}&checkin=${checkin}&checkout=${checkout}&aid=4297311`} target="_blank" rel="noopener noreferrer" style={{ padding: "11px", borderRadius: 8, background: "#003580", color: "#fff", textDecoration: "none", fontSize: 13.5, fontWeight: 500, textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>Book hotels on Booking.com →</a>
+              <a href={`https://www.getyourguide.com/s/?q=${dest}&partner_id=5566445`} target="_blank" rel="noopener noreferrer" style={{ padding: "11px", borderRadius: 8, background: "#FF5533", color: "#fff", textDecoration: "none", fontSize: 13.5, fontWeight: 500, textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>Book activities on GetYourGuide →</a>
+              <a href={`https://www.kiwi.com/en/search/results/anywhere/${dest}/${checkin}/${checkout}?affilid=4766423`} target="_blank" rel="noopener noreferrer" style={{ padding: "11px", borderRadius: 8, background: "#00A991", color: "#fff", textDecoration: "none", fontSize: 13.5, fontWeight: 500, textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>Search flights on Kiwi.com →</a>
+            </div>
+            <p style={{ fontSize: 11, color: "#aaa", textAlign: "center", marginTop: 10, fontFamily: "'DM Sans', sans-serif" }}>TripDone earns a small commission on bookings — at no cost to you.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [saveState, setSaveState] = useState(isSaved ? "saved" : "unsaved");
+  const basket = useTripBasket();
   const chatBottomRef = useRef(null);
   useEffect(() => { chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages, chatLoading]);
 
@@ -956,11 +1113,37 @@ function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
         <PDFExport itinerary={itinerary}/>
       </div>
 
-      {/* Hotel with tier toggle */}
-      <HotelTierToggle itinerary={itinerary}/>
+      {/* Hotel with tier toggle removed — now shown inline in day cards */}
 
       <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 12 }}>Day by day</div>
-      {itinerary.days.map((day, i) => <DayCard key={i} day={day} index={i}/>)}
+      {itinerary.days.map((day, i) => <DayCard key={i} day={day} index={i} locations={itinerary.locations || []}/>)}
+
+      {/* Bookable cards — all activities and accommodation across trip */}
+      {(() => {
+        const allBookables = [];
+        (itinerary.days || []).forEach(day => {
+          (day.bookables || []).forEach((b, bi) => {
+            allBookables.push({ ...b, id: `day${day.day}-${bi}`, location: day.location, rawPrice: b.price ? parseFloat(b.price.replace(/[^0-9.]/g, "")) || 0 : 0 });
+          });
+        });
+        (itinerary.locations || []).forEach((loc, li) => {
+          if (loc.hotel) allBookables.push({ id: `hotel-${li}`, name: loc.hotel.name, type: "hotel", platform: "Booking.com", price: loc.hotel.priceRange, url: loc.hotel.bookingUrl || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(loc.hotel.name)}&aid=4297311`, location: loc.location, rawPrice: parseFloat((loc.hotel.priceRange || "").replace(/[^0-9.]/g, "")) || 0 });
+          if (loc.alternatives?.budget) allBookables.push({ id: `hostel-${li}`, name: loc.alternatives.budget.hotel, type: "hostel", platform: "Hostelworld", price: loc.alternatives.budget.priceRange, url: loc.alternatives.budget.bookingUrl || `https://www.hostelworld.com/search?search_keywords=${encodeURIComponent(loc.alternatives.budget.hotel)}`, location: loc.location, rawPrice: parseFloat((loc.alternatives.budget.priceRange || "").replace(/[^0-9.]/g, "")) || 0 });
+        });
+        if (allBookables.length === 0) return null;
+        return (
+          <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, padding: "18px 20px", marginBottom: 20, background: "#fdfbf8" }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaa", fontFamily: "'DM Sans', sans-serif", marginBottom: 6 }}>🧳 Build your trip</div>
+            <p style={{ fontSize: 13, color: "#888", fontFamily: "'DM Sans', sans-serif", marginBottom: 16 }}>Add items to your trip basket, then book everything in one go.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
+              {allBookables.map(item => <BookableCard key={item.id} item={item} basket={basket}/>)}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Basket panel */}
+      <TripBasketPanel basket={basket} itinerary={itinerary} answers={answers}/>
 
       {/* Packing List (now shown inline) */}
       {itinerary.packingList && (
