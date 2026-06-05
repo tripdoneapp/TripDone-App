@@ -143,76 +143,44 @@ function GooglePlayButton() {
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-const ITINERARY_SYSTEM = `You are TripDone, a premium AI travel planner. Given a traveller's preferences, generate a detailed day-by-day itinerary as JSON.
-Return ONLY valid JSON, no markdown, no explanation. Format:
+const ITINERARY_SYSTEM = `You are TripDone, a premium AI travel planner. Generate a detailed day-by-day itinerary as JSON.
+Return ONLY valid JSON, no markdown. Format:
 {
   "destination": "string",
-  "tagline": "short evocative description (max 10 words)",
-  "duration": "e.g. 14 days",
+  "tagline": "max 10 words",
+  "duration": "e.g. 7 days",
   "locations": [
     {
       "location": "e.g. Tokyo",
       "nights": 2,
-      "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £75/night", "bookingUrl": "https://www.booking.com/hotel/..." },
+      "hotel": { "name": "string", "area": "string", "description": "1 sentence", "priceRange": "e.g. £75/night", "bookingUrl": "https://www.booking.com/searchresults.html?ss=HOTEL+NAME&aid=4297311" },
       "alternatives": {
-        "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £18/night", "note": "1 sentence", "bookingUrl": "https://www.hostelworld.com/..." },
-        "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £220/night", "note": "1 sentence", "bookingUrl": "https://www.booking.com/hotel/..." }
+        "budget": { "hotel": "name", "area": "area", "priceRange": "e.g. £18/night", "note": "1 sentence", "bookingUrl": "https://www.hostelworld.com/search?search_keywords=HOSTEL+NAME" },
+        "luxury": { "hotel": "name", "area": "area", "priceRange": "e.g. £220/night", "note": "1 sentence", "bookingUrl": "https://www.booking.com/searchresults.html?ss=HOTEL+NAME&aid=4297311" }
       }
     }
   ],
   "days": [{
-    "day": 1,
-    "location": "e.g. Tokyo",
-    "theme": "string",
-    "isTravel": false,
-    "travelFrom": null,
-    "travelTo": null,
-    "travelMethod": null,
-    "travelDuration": null,
-    "morning": "string",
-    "afternoon": "string",
-    "evening": "string",
-    "transport": "string",
-    "insiderTip": "string",
-    "bookables": [
-      { "name": "string", "type": "activity|hostel|hotel|transport", "platform": "GetYourGuide|Booking.com|Hostelworld|Viator", "price": "e.g. £25/person", "url": "https://..." }
-    ]
+    "day": 1, "location": "string", "theme": "string",
+    "isTravel": false, "travelFrom": null, "travelTo": null, "travelMethod": null, "travelDuration": null,
+    "morning": "string", "afternoon": "string", "evening": "string",
+    "transport": "string", "insiderTip": "string",
+    "bookables": [{ "name": "string", "type": "activity|hotel|hostel|transport", "platform": "string", "price": "string", "url": "string" }]
   }],
   "practicalInfo": { "bestTransport": "string", "mustBook": "string", "packingTip": "string" },
-  "packingList": { "essentials": ["item1","item2"], "clothing": ["item1","item2"], "extras": ["item1","item2"] },
-  "helpfulLinks": [
-    { "title": "string", "desc": "1 short sentence", "url": "https://...", "source": "e.g. Lonely Planet" }
-  ]
+  "packingList": { "essentials": ["string"], "clothing": ["string"], "extras": ["string"] },
+  "helpfulLinks": [{ "title": "string", "desc": "string", "url": "string", "source": "string" }]
 }
-
-BOOKABLES RULES — follow these exactly:
-- Include 2-4 bookable items per day covering the main activities mentioned.
-- For activities: link to GetYourGuide or Viator search for that specific activity e.g. https://www.getyourguide.com/s/?q=TeamLab+Planets+Tokyo&partner_id=5566445
-- For hostels: link to Hostelworld search e.g. https://www.hostelworld.com/search?search_keywords=Wise+Owl+Hostel+Tokyo
-- For hotels: link to Booking.com search for that specific property e.g. https://www.booking.com/searchresults.html?ss=Park+Hyatt+Tokyo&aid=4297311
-- For transport (Shinkansen etc): link to relevant booking site
-- Only include bookables for activities explicitly mentioned in that day's morning/afternoon/evening.
-- On travel days, include a bookable for the transport (train/bus/ferry booking).
-- price should be approximate per person where possible.
-
-MOVEMENT & LOCATION RULES — follow these exactly:
-- Use the "Movement frequency" value to determine how many nights to spend in each location.
-- every_day = 1 night per location. every_2_days = 2 nights. every_3_days = 3 nights. every_4_days = 4 nights. every_5_days = 5 nights. stay_put = entire trip in one location.
-- Calculate the number of locations from trip duration divided by nights per location.
-- Day trips from a base city do NOT count as a new location.
-- For travel days: set "isTravel": true, fill travelFrom, travelTo, travelMethod, travelDuration. Still fill afternoon and evening.
-- Each location in "locations" array must have its own hotel recommendation.
-
-HOTEL TIER RULES — follow these exactly:
-- "hotel" (recommended): Real, highly-rated hotel £50-£100/night. Specific real name required.
-- "alternatives.budget": Best-reviewed hostel in that location. Must be a hostel. Under £30/night dorm. Specific real name required.
-- "alternatives.luxury": Real 5-star hotel £150+/night. Specific real name required.
-
-HELPFUL LINKS RULES:
-- Include 5-7 editorial articles only — NO booking sites.
-- Sources: Lonely Planet, Culture Trip, Time Out, BBC Travel, National Geographic, Guardian Travel, Condé Nast.
-
-Generate the correct number of days based on trip dates. Be specific with real place names. Make it feel curated, not generic.`;
+RULES:
+- Movement frequency: every_day=1 night/location, every_2_days=2 nights, every_3_days=3, every_4_days=4, every_5_days=5, stay_put=all nights one place
+- Calculate locations = trip duration / nights per location
+- Day trips don't count as new locations
+- Travel days: isTravel=true, fill travelFrom/To/Method/Duration, still fill afternoon+evening
+- Each location needs its own hotel. Budget=best reviewed hostel under £30/night. Recommended=£50-100/night. Luxury=£150+/night. All must be real named properties.
+- Bookables: max 2 per day, activities link to https://www.getyourguide.com/s/?q=ACTIVITY+NAME&partner_id=5566445
+- helpfulLinks: 4-5 editorial articles only, no booking sites
+- Keep descriptions concise — 1-2 sentences max per field
+- packingList: max 5 items per category`;
 
 const REFINE_SYSTEM = `You are TripDone, a premium AI travel concierge. The user has an existing itinerary and wants to refine it. Respond conversationally and concisely — confirm what you've changed and why it's a great call. Keep responses under 3 sentences. Be warm, confident, and specific.`;
 
@@ -230,6 +198,48 @@ async function callClaude(system, userMessage, maxTokens = 1500) {
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
   return data.content.map(b => b.text || "").join("");
+}
+
+async function callClaudeStream(system, userMessage, maxTokens = 12000, onChunk) {
+  const res = await fetch("https://tripdoneapi.tpritchard.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: maxTokens,
+      stream: true,
+      system,
+      messages: [{ role: "user", content: userMessage }],
+    }),
+  });
+  if (!res.ok) throw new Error("API error " + res.status);
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let fullText = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const data = trimmed.slice(5).trim();
+      if (data === "[DONE]") continue;
+      try {
+        const parsed = JSON.parse(data);
+        // Handle both streaming delta format and content block format
+        const text = parsed.delta?.text || (parsed.type === "content_block_delta" ? parsed.delta?.text : "") || "";
+        if (text) {
+          fullText += text;
+          if (onChunk) onChunk(fullText);
+        }
+      } catch {}
+    }
+  }
+  return fullText;
 }
 
 // ─── Calendar Picker ──────────────────────────────────────────────────────────
@@ -1384,7 +1394,26 @@ function RoamApp({ onItineraryReady, onBookNow }) {
     try {
       const dates = answers.dates?.start && answers.dates?.end ? `${answers.dates.start} to ${answers.dates.end}` : answers.dates;
       const prompt = `Build a trip itinerary:\nDestination: ${answers.destination}\nTrip type: ${answers.tripType}\nDates: ${dates}\nTravellers: ${typeof answers.travellers === "object" ? Object.entries(answers.travellers).filter(([,v]) => v > 0).map(([k,v]) => `${v} ${k}`).join(", ") : answers.travellers}\nBudget: ${typeof answers.budget === "object" ? `£${answers.budget.min?.toLocaleString()} – £${answers.budget.max >= 10000 ? "10,000+" : answers.budget.max?.toLocaleString()}` : answers.budget}\nPace: ${answers.pace}\nMovement frequency: ${answers.movement}\nInterests: ${(answers.interests || []).join(", ")}`;
-      const raw = await callClaude(ITINERARY_SYSTEM, prompt, 4000);
+
+      const raw = await callClaudeStream(ITINERARY_SYSTEM, prompt, 12000, (partial) => {
+        try {
+          let clean = partial.trim().replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+          const start = clean.indexOf("{");
+          if (start === -1) return;
+          let attempt = clean.slice(start);
+          const opens = (attempt.match(/\[/g) || []).length;
+          const closes = (attempt.match(/\]/g) || []).length;
+          const objOpens = (attempt.match(/\{/g) || []).length;
+          const objCloses = (attempt.match(/\}/g) || []).length;
+          attempt += "]".repeat(Math.max(0, opens - closes)) + "}".repeat(Math.max(0, objOpens - objCloses));
+          const partialData = JSON.parse(attempt);
+          if (partialData.destination && partialData.days?.length > 0) {
+            setItinerary(partialData);
+            setScreen("itinerary");
+          }
+        } catch {}
+      });
+
       let clean = raw.trim().replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
       const start = clean.indexOf("{"), end = clean.lastIndexOf("}");
       if (start === -1 || end === -1) throw new Error("No JSON found");
