@@ -45,21 +45,26 @@ function useTripAdvisor() {
   }, []);
 
   // Search nearby by category: attractions | hotels | restaurants | geos
+  // category: "attractions" | "hotels" | "restaurants"
   const searchNearby = useCallback(async (cityName, category = "attractions", limit = 6) => {
     const k = `nearby:${cityName}:${category}:${limit}`;
     if (taCache[k]) return taCache[k];
     try {
-      // First find the city location_id
-      const cityLoc = await searchLocation(cityName);
-      if (!cityLoc) return [];
+      // TA Content API: search with category filter
+      const categoryMap = {
+        attractions: "attractions",
+        hotels: "hotels",
+        restaurants: "restaurants",
+      };
+      const cat = categoryMap[category] || "attractions";
       const res = await fetch(
-        `${TA_PROXY}/location/search?query=${encodeURIComponent(cityName)}&language=en&category=${category}&limit=${limit}`
+        `${TA_PROXY}/location/search?searchQuery=${encodeURIComponent(cityName)}&category=${cat}&language=en`
       );
       const data = await res.json();
-      const results = data?.data || [];
-      // Enrich each result with photo + details in parallel (cap at limit)
+      const results = (data?.data || []).slice(0, limit);
+      if (results.length === 0) { taCache[k] = []; return []; }
       const enriched = await Promise.all(
-        results.slice(0, limit).map(async (loc) => {
+        results.map(async (loc) => {
           const [photos, details] = await Promise.all([
             getPhotos(loc.location_id),
             getDetails(loc.location_id),
@@ -1034,7 +1039,6 @@ function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [saveState, setSaveState] = useState(isSaved ? "saved" : "unsaved");
-  const basket = useTripBasket();
   const chatBottomRef = useRef(null);
   useEffect(() => { chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages, chatLoading]);
 
@@ -1061,7 +1065,7 @@ function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
         <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, color: "#fff", fontWeight: 400, margin: "0 0 6px" }}>{itinerary.destination}</h1>
         <p style={{ fontFamily: "'DM Sans', sans-serif", color: "#0ea5e9", fontSize: 15, margin: "0 0 20px" }}>{itinerary.tagline}</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {onBookNow && <button onClick={onBookNow} style={{ padding: "11px 28px", borderRadius: 8, background: "#0ea5e9", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Book this trip →</button>}
+
           <button onClick={handleSave} style={{ padding: "11px 20px", borderRadius: 8, background: saveState==="saved"?"rgba(14,165,233,0.2)":"rgba(255,255,255,0.1)", border: `1.5px solid ${saveState==="saved"?"#0ea5e9":"rgba(255,255,255,0.2)"}`, color: saveState==="saved"?"#0ea5e9":"rgba(255,255,255,0.7)", fontSize: 13.5, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
             {saveState === "saved" ? "✓ Saved" : "+ Save trip"}
           </button>
@@ -1101,22 +1105,7 @@ function ItineraryView({ itinerary, answers, onBookNow, onSaveTrip, isSaved }) {
         );
       })()}
 
-      {(() => {
-        const allBookables = [];
-        (itinerary.days||[]).forEach(day => { (day.bookables||[]).forEach((b,bi) => { allBookables.push({...b,id:`day${day.day}-${bi}`,location:day.location,rawPrice:b.price?parseFloat(b.price.replace(/[^0-9.]/g,""))||0:0}); }); });
-        if (allBookables.length === 0) return null;
-        return (
-          <div style={{ border:"1.5px solid #e8e2d9",borderRadius:14,padding:"18px 20px",marginBottom:20,background:"#fdfbf8" }}>
-            <div style={{ fontSize:11,letterSpacing:"0.15em",textTransform:"uppercase",color:"#aaa",fontFamily:"'DM Sans',sans-serif",marginBottom:6 }}>🧳 Build your trip</div>
-            <p style={{ fontSize:13,color:"#888",fontFamily:"'DM Sans',sans-serif",marginBottom:16 }}>Add items to your trip basket, then book everything in one go.</p>
-            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:14 }}>
-              {allBookables.map(item => <BookableCard key={item.id} item={item} basket={basket}/>)}
-            </div>
-          </div>
-        );
-      })()}
 
-      <TripBasketPanel basket={basket} itinerary={itinerary} answers={answers}/>
 
       {itinerary.packingList && (
         <div style={{ border:"1.5px solid #e8e2d9",borderRadius:14,padding:"18px 20px",marginBottom:16,background:"#fdfbf8" }}>
@@ -1624,15 +1613,7 @@ function BookingPage({ itinerary, answers, onBack, onHome }) {
   const checkout=answers?.dates?.end||"";
   const adults=(answers?.travellers?.adults||0)+(answers?.travellers?.pensioners||0)||2;
   const children=answers?.travellers?.children||0;
-  const bookingLinks=[
-    {label:"Hotels",platform:"Booking.com",color:"#003276",desc:itinerary?.hotel?.name?`Search for ${itinerary.hotel.name}`:"Find your perfect stay",href:`https://www.booking.com/searchresults.html?ss=${dest}&checkin=${checkin}&checkout=${checkout}&group_adults=${adults}&group_children=${children}&aid=4297311`},
-    {label:"Flights",platform:"Kiwi.com",color:"#00A991",desc:`Search flights to ${itinerary?.destination||"your destination"}`,href:`https://www.kiwi.com/en/search/results/anywhere/${dest}/${checkin}/${checkout}?affilid=4766423`},
-    {label:"Flights & Hotels",platform:"Expedia UK",color:"#FFC72C",desc:"Compare flights and hotels together",href:`https://www.expedia.co.uk/Hotels-Search?destination=${dest}&startDate=${checkin}&endDate=${checkout}&adults=${adults}&affcid=5288967`},
-    {label:"Activities",platform:"GetYourGuide",color:"#FF5533",desc:"Tours, experiences and day trips",href:`https://www.getyourguide.com/s/?q=${dest}&date_from=${checkin}&date_to=${checkout}&partner_id=DOLLD2P`},
-    {label:"Vacation rentals",platform:"Airbnb",color:"#FF5A5F",desc:"Apartments, villas and unique stays",href:`https://www.airbnb.com/s/${dest}/homes?checkin=${checkin}&checkout=${checkout}&adults=${adults}`},
-    {label:"Travel Insurance",platform:"World Nomads",color:"#E8463A",desc:"Travel insurance for adventurous travellers",href:`https://www.worldnomads.com/travel-insurance/?affiliate=6159036`},
-  ];
-  const sections=[{id:"overview",label:"Overview"},{id:"days",label:"Day by Day"},{id:"stay",label:"Where to Stay"},{id:"book",label:"Book It"}];
+  const sections=[{id:"overview",label:"Overview"},{id:"days",label:"Day by Day"},{id:"stay",label:"Where to Stay"}];
   return (
     <div style={{ minHeight:"100vh",background:"#f8f9ff",fontFamily:"'DM Sans',sans-serif",width:"100%" }}>
       <style>{`${FONTS} *{box-sizing:border-box;margin:0;padding:0;} html,body{background:#f8f9ff;width:100%;overflow-x:hidden;} @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
@@ -1650,27 +1631,7 @@ function BookingPage({ itinerary, answers, onBack, onHome }) {
         </div>
       </div>
       <div style={{ maxWidth:1000,margin:"0 auto",padding:"40px 5vw 100px" }}>
-        {activeSection==="book"&&(
-          <div style={{ animation:"fadeUp 0.3s ease" }}>
-            <p style={{ fontSize:15,color:"#888",marginBottom:28,lineHeight:1.7 }}>Everything you need to book your trip — all pre-filled for {itinerary?.destination}.</p>
-            <div style={{ display:"flex",flexDirection:"column",gap:14,marginBottom:28 }}>
-              {bookingLinks.map(b=>(
-                <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"space-between",background:"#fff",borderRadius:14,padding:"20px 24px",border:"1.5px solid #e0e6f0" }}
-                  onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 8px 24px rgba(0,53,128,0.1)";e.currentTarget.style.borderColor="#003580";}}
-                  onMouseLeave={e=>{e.currentTarget.style.boxShadow="none";e.currentTarget.style.borderColor="#e0e6f0";}}>
-                  <div>
-                    <div style={{ fontSize:15,fontWeight:500,color:"#1a1a1a",marginBottom:2 }}>{b.label}</div>
-                    <div style={{ fontSize:13,color:"#888" }}>{b.desc}</div>
-                  </div>
-                  <div style={{ display:"flex",alignItems:"center",gap:10 }}>
-                    <span style={{ fontSize:12,color:"#aaa" }}>via {b.platform}</span>
-                    <div style={{ background:b.color,color:"#fff",borderRadius:8,padding:"8px 18px",fontSize:13.5,fontWeight:500 }}>Book →</div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+
         {activeSection==="stay"&&(
           <div style={{ animation:"fadeUp 0.3s ease" }}>
             {itinerary?.locations?.length>0?(
