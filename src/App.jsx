@@ -139,11 +139,7 @@ function TADiscoverSection({ cityName }) {
   ];
 
   const catColor = { attractions: "#003580", hotels: "#7c3aed", restaurants: "#e55300" };
-  const catBookUrl = (item) => {
-    if (tab === "hotels") return `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(item.name + " " + cityName)}&aid=4297311`;
-    if (tab === "attractions") return `https://www.getyourguide.com/s/?q=${encodeURIComponent(item.name + " " + cityName)}&partner_id=DOLLD2P`;
-    return item.webUrl || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(item.name)}`;
-  };
+
 
   return (
     <div style={{ border: "1.5px solid #e8e2d9", borderRadius: 14, overflow: "hidden", marginBottom: 20, background: "#fff" }}>
@@ -212,12 +208,9 @@ function TADiscoverSection({ cityName }) {
                   {item.description && <div style={{ fontSize: 12, color: "#666", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.description}</div>}
                   {item.hours && <div style={{ fontSize: 11, color: "#888", fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>🕐 {item.hours}</div>}
                   <div style={{ display: "flex", gap: 6 }}>
-                    <a href={catBookUrl(item)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "7px 0", borderRadius: 7, background: catColor[tab], color: "#fff", textDecoration: "none", fontSize: 12, fontWeight: 500, textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>
-                      {tab === "hotels" ? "Book →" : tab === "attractions" ? "Book →" : "View →"}
-                    </a>
-                    {item.webUrl && (
-                      <a href={item.webUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "7px 10px", borderRadius: 7, border: "1.5px solid #e0e6f0", color: "#555", textDecoration: "none", fontSize: 12, fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center" }}>TA</a>
-                    )}
+                    <div style={{ flex: 1, padding: "7px 0", borderRadius: 7, background: "#eef3ff", color: "#003580", fontSize: 11, fontWeight: 500, textAlign: "center", fontFamily: "'DM Sans', sans-serif", border: "1.5px solid #c7d9f5", cursor: "default" }}>
+                      Book on TripDone — coming soon
+                    </div>
                   </div>
                 </div>
               </div>
@@ -707,7 +700,7 @@ function DayCard({ day, index, locations = [] }) {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, marginLeft: 12, flexShrink: 0 }}>
                     <div style={{ background: "#eef3ff", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "#003580", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}>{currentAccom.priceRange}</div>
-                    <a href={currentAccom.bookingUrl || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(currentAccom.name || currentAccom.hotel)}&aid=4297311`} target="_blank" rel="noopener noreferrer" style={{ background: "#003580", color: "#fff", borderRadius: 6, padding: "5px 12px", fontSize: 11.5, fontWeight: 500, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}>Book →</a>
+                    <div style={{ background: "#eef3ff", color: "#003580", borderRadius: 6, padding: "5px 12px", fontSize: 11, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap", border: "1.5px solid #c7d9f5" }}>Book on TripDone — coming soon</div>
                   </div>
                 </div>
               </div>
@@ -736,7 +729,7 @@ function DayCard({ day, index, locations = [] }) {
                       <div style={{ fontSize: 13.5, fontWeight: 500, color: "#1a1a1a", fontFamily: "'DM Sans', sans-serif" }}>{b.name}</div>
                       <div style={{ fontSize: 11.5, color: "#888", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>{b.platform}{b.price ? ` · ${b.price}` : ""}</div>
                     </div>
-                    <div style={{ background: "#003580", color: "#fff", borderRadius: 6, padding: "5px 12px", fontSize: 12, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap", marginLeft: 10 }}>Book →</div>
+                    <div style={{ background: "#eef3ff", color: "#003580", borderRadius: 6, padding: "5px 12px", fontSize: 11, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap", marginLeft: 10, border: "1.5px solid #c7d9f5" }}>Coming soon</div>
                   </a>
                 ))}
               </div>
@@ -797,7 +790,7 @@ function HotelTile({ hotel, location, tier = "recommended", bookingUrl }) {
         <div style={{ fontSize: 12.5, color: "#555", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4, marginBottom: 12 }}>{hotel?.description || hotel?.note}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ background: "#eef3ff", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "#003580", fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{hotel?.priceRange}</div>
-          <a href={bookingUrl || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotel?.name || hotel?.hotel || "")}&aid=4297311`} target="_blank" rel="noopener noreferrer" style={{ background: "#003580", color: "#fff", borderRadius: 6, padding: "6px 14px", fontSize: 12, fontWeight: 500, textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}>Book →</a>
+          <div style={{ background: "#eef3ff", color: "#003580", borderRadius: 6, padding: "6px 14px", fontSize: 11, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", border: "1.5px solid #c7d9f5", cursor: "default" }}>Book on TripDone — coming soon</div>
         </div>
       </div>
     </div>
@@ -1020,12 +1013,10 @@ function TripBasketPanel({ basket, itinerary, answers }) {
           </div>
           <div style={{ padding:"14px 16px",borderTop:"1px solid #e0e6f0" }}>
             {basket.total > 0 && <div style={{ fontSize:13,color:"#888",fontFamily:"'DM Sans',sans-serif",marginBottom:10 }}>Estimated total: <strong style={{ color:"#003580" }}>~£{basket.total.toFixed(0)}</strong></div>}
-            <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
-              <a href={`https://www.booking.com/searchresults.html?ss=${dest}&checkin=${checkin}&checkout=${checkout}&aid=4297311`} target="_blank" rel="noopener noreferrer" style={{ padding:"11px",borderRadius:8,background:"#003580",color:"#fff",textDecoration:"none",fontSize:13.5,fontWeight:500,textAlign:"center",fontFamily:"'DM Sans',sans-serif" }}>Book hotels on Booking.com →</a>
-              <a href={`https://www.getyourguide.com/s/?q=${dest}&partner_id=DOLLD2P`} target="_blank" rel="noopener noreferrer" style={{ padding:"11px",borderRadius:8,background:"#FF5533",color:"#fff",textDecoration:"none",fontSize:13.5,fontWeight:500,textAlign:"center",fontFamily:"'DM Sans',sans-serif" }}>Book activities on GetYourGuide →</a>
-              <a href={`https://www.kiwi.com/en/search/results/anywhere/${dest}/${checkin}/${checkout}?affilid=4766423`} target="_blank" rel="noopener noreferrer" style={{ padding:"11px",borderRadius:8,background:"#00A991",color:"#fff",textDecoration:"none",fontSize:13.5,fontWeight:500,textAlign:"center",fontFamily:"'DM Sans',sans-serif" }}>Search flights on Kiwi.com →</a>
+            <div style={{ background:"#eef3ff",borderRadius:10,padding:"12px 14px",border:"1.5px solid #c7d9f5",textAlign:"center" }}>
+              <div style={{ fontSize:13,fontWeight:600,color:"#003580",fontFamily:"'DM Sans',sans-serif",marginBottom:4 }}>One-click booking coming soon</div>
+              <div style={{ fontSize:12,color:"#4a72b0",fontFamily:"'DM Sans',sans-serif" }}>Book everything on TripDone — no tabs, no redirects.</div>
             </div>
-            <p style={{ fontSize:11,color:"#aaa",textAlign:"center",marginTop:10,fontFamily:"'DM Sans',sans-serif" }}>TripDone earns a small commission on bookings — at no cost to you.</p>
           </div>
         </div>
       )}
@@ -1322,9 +1313,12 @@ function ScrollQuiz({ answers, setAnswers, onSubmit, error }) {
   );
 }
 
-function RoamApp({ onItineraryReady, onBookNow }) {
+function RoamApp({ onItineraryReady, onBookNow, presetTripType }) {
   const [screen, setScreen] = useState("quiz");
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState(() => presetTripType ? { tripType: presetTripType } : {});
+  useEffect(() => {
+    if (presetTripType) setAnswers(prev => ({ ...prev, tripType: presetTripType }));
+  }, [presetTripType]);
   const [itinerary, setItinerary] = useState(null);
   const [error, setError] = useState(null);
   const { trips, save, remove } = useSavedTrips();
@@ -1606,14 +1600,29 @@ function SettingsPage({ user, onClose, onSignOut }) {
 }
 
 function BookingPage({ itinerary, answers, onBack, onHome }) {
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState("book");
   const [activeDay, setActiveDay] = useState(0);
-  const dest=encodeURIComponent(itinerary?.destination||"");
-  const checkin=answers?.dates?.start||"";
-  const checkout=answers?.dates?.end||"";
-  const adults=(answers?.travellers?.adults||0)+(answers?.travellers?.pensioners||0)||2;
-  const children=answers?.travellers?.children||0;
-  const sections=[{id:"overview",label:"Overview"},{id:"days",label:"Day by Day"},{id:"stay",label:"Where to Stay"}];
+  const sections=[{id:"book",label:"Book Your Trip"},{id:"stay",label:"Where to Stay"},{id:"days",label:"Day by Day"}];
+
+  const BOOK_ON_TRIPDONE = [
+    { icon: "✈", label: "Flights", desc: "Search and book flights to your destination.", status: "coming_soon" },
+    { icon: "🏨", label: "Hotels & Hostels", desc: "All accommodation options from your itinerary.", status: "coming_soon" },
+    { icon: "🎯", label: "Activities & Tours", desc: "Day trips, guided tours, experiences and more.", status: "coming_soon" },
+    { icon: "🚗", label: "Car Hire", desc: "Pick up and drop off at your destination.", status: "coming_soon" },
+    { icon: "🚕", label: "Airport Transfers", desc: "Private transfers to and from the airport.", status: "coming_soon" },
+    { icon: "🏠", label: "Vacation Rentals", desc: "Apartments, villas and unique stays.", status: "coming_soon" },
+    { icon: "🛡", label: "Travel Insurance", desc: "Cover for the whole trip in one place.", status: "coming_soon" },
+  ];
+
+  const BOOK_YOURSELF = [
+    { icon: "🗾", label: "Visa Applications", desc: "Visas must be applied for directly through the official government portal for your destination country. TripDone cannot process visa applications.", link: "https://www.gov.uk/foreign-travel-advice" },
+    { icon: "🚅", label: "Rail Passes", desc: "Regional rail passes such as JR Pass (Japan), Eurail (Europe) or Britrail must be purchased directly from the issuing authority before travel.", link: "https://www.jrailpass.com" },
+    { icon: "🚢", label: "Cruises", desc: "Cruise bookings require direct purchase through the cruise line or a specialist broker. Itineraries and cabin selection vary too much for a standard API.", link: "https://www.cruises.co.uk" },
+    { icon: "🎢", label: "Theme Parks", desc: "Theme parks such as Disney, Universal or Legoland require direct booking through their own sites for accurate date-based pricing and availability.", link: "https://www.disneyworld.co.uk" },
+    { icon: "🪂", label: "Specialist Adventure", desc: "Bungee jumping, skydiving, white water rafting and other specialist operators typically don't offer third-party booking. Book direct with the operator.", link: null },
+    { icon: "🎓", label: "Language Schools & Courses", desc: "Enrolment in language schools, cooking courses or educational programmes requires direct application to the institution.", link: null },
+  ];
+
   return (
     <div style={{ minHeight:"100vh",background:"#f8f9ff",fontFamily:"'DM Sans',sans-serif",width:"100%" }}>
       <style>{`${FONTS} *{box-sizing:border-box;margin:0;padding:0;} html,body{background:#f8f9ff;width:100%;overflow-x:hidden;} @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
@@ -1621,17 +1630,78 @@ function BookingPage({ itinerary, answers, onBack, onHome }) {
         <div style={{ cursor:"pointer" }} onClick={onHome}><TripDoneLogo/></div>
         <button onClick={onBack} style={{ padding:"9px 20px",borderRadius:6,background:"transparent",border:"1.5px solid #003580",color:"#003580",fontSize:13.5,fontWeight:500,cursor:"pointer" }}>← Back to itinerary</button>
       </nav>
+
+      {/* Header */}
       <div style={{ background:"linear-gradient(135deg, #003580 0%, #0c4a8a 100%)",padding:"52px 5vw 0",width:"100%" }}>
         <div style={{ maxWidth:1000,margin:"0 auto" }}>
-          <h1 style={{ fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(36px,5vw,60px)",fontWeight:300,color:"#fff",marginBottom:8 }}>{itinerary?.destination||"Your Trip"}</h1>
-          <p style={{ fontFamily:"'DM Sans',sans-serif",color:"rgba(255,255,255,0.65)",fontSize:18,marginBottom:28 }}>{itinerary?.tagline}</p>
-          <div style={{ display:"flex",gap:4,borderBottom:"1px solid rgba(255,255,255,0.15)",paddingBottom:0 }}>
+          <h1 style={{ fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(32px,5vw,56px)",fontWeight:300,color:"#fff",marginBottom:6 }}>{itinerary?.destination||"Your Trip"}</h1>
+          <p style={{ fontFamily:"'DM Sans',sans-serif",color:"rgba(255,255,255,0.65)",fontSize:16,marginBottom:28 }}>{itinerary?.tagline}</p>
+          <div style={{ display:"flex",gap:4,borderBottom:"1px solid rgba(255,255,255,0.15)" }}>
             {sections.map(s=><button key={s.id} onClick={()=>setActiveSection(s.id)} style={{ padding:"10px 20px",background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:13.5,fontWeight:activeSection===s.id?600:400,color:activeSection===s.id?"#fff":"rgba(255,255,255,0.5)",borderBottom:activeSection===s.id?"2px solid #fff":"2px solid transparent",marginBottom:-1 }}>{s.label}</button>)}
           </div>
         </div>
       </div>
+
       <div style={{ maxWidth:1000,margin:"0 auto",padding:"40px 5vw 100px" }}>
 
+        {/* ── Book Your Trip ── */}
+        {activeSection==="book" && (
+          <div style={{ animation:"fadeUp 0.3s ease" }}>
+
+            {/* Coming to TripDone */}
+            <div style={{ marginBottom:40 }}>
+              <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>
+                <div style={{ width:8,height:8,borderRadius:"50%",background:"#003580" }}/>
+                <h2 style={{ fontFamily:"'DM Sans',sans-serif",fontSize:22,fontWeight:400,color:"#1a1a1a" }}>Book everything on TripDone</h2>
+              </div>
+              <p style={{ fontSize:14,color:"#888",fontFamily:"'DM Sans',sans-serif",marginBottom:20,marginLeft:18 }}>All of these will be bookable directly on TripDone — no redirects, no other tabs. We're building it now.</p>
+              <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+                {BOOK_ON_TRIPDONE.map(item => (
+                  <div key={item.label} style={{ display:"flex",alignItems:"center",justifyContent:"space-between",background:"#fff",borderRadius:14,padding:"18px 22px",border:"1.5px solid #e0e6f0" }}>
+                    <div style={{ display:"flex",alignItems:"center",gap:14 }}>
+                      <div style={{ width:40,height:40,borderRadius:10,background:"#eef3ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0 }}>{item.icon}</div>
+                      <div>
+                        <div style={{ fontSize:15,fontWeight:500,color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif",marginBottom:2 }}>{item.label}</div>
+                        <div style={{ fontSize:13,color:"#888",fontFamily:"'DM Sans',sans-serif" }}>{item.desc}</div>
+                      </div>
+                    </div>
+                    <div style={{ background:"#eef3ff",color:"#003580",borderRadius:8,padding:"7px 16px",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",border:"1.5px solid #c7d9f5",flexShrink:0,marginLeft:12 }}>Coming soon</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* You'll need to book these yourself */}
+            <div style={{ borderTop:"1.5px solid #e8edf5",paddingTop:36 }}>
+              <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>
+                <div style={{ width:8,height:8,borderRadius:"50%",background:"#f59e0b" }}/>
+                <h2 style={{ fontFamily:"'DM Sans',sans-serif",fontSize:22,fontWeight:400,color:"#1a1a1a" }}>You'll need to book these yourself</h2>
+              </div>
+              <p style={{ fontSize:14,color:"#888",fontFamily:"'DM Sans',sans-serif",marginBottom:20,marginLeft:18 }}>These can't be booked through a standard API. We've listed them here so nothing slips through the cracks.</p>
+              <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+                {BOOK_YOURSELF.map(item => (
+                  <div key={item.label} style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",background:"#fffaf5",borderRadius:14,padding:"18px 22px",border:"1.5px solid #fde8cc",gap:12 }}>
+                    <div style={{ display:"flex",alignItems:"flex-start",gap:14,flex:1,minWidth:0 }}>
+                      <div style={{ width:40,height:40,borderRadius:10,background:"#fff3e0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0,marginTop:2 }}>{item.icon}</div>
+                      <div style={{ flex:1,minWidth:0 }}>
+                        <div style={{ fontSize:15,fontWeight:500,color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif",marginBottom:4 }}>{item.label}</div>
+                        <div style={{ fontSize:13,color:"#666",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5 }}>{item.desc}</div>
+                      </div>
+                    </div>
+                    {item.link && (
+                      <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ background:"#f59e0b",color:"#fff",borderRadius:8,padding:"7px 16px",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",textDecoration:"none",flexShrink:0,alignSelf:"center" }}>Visit site →</a>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:20,background:"#f8f9ff",borderRadius:10,padding:"14px 18px",border:"1.5px solid #e0e6f0",fontSize:13,color:"#888",fontFamily:"'DM Sans',sans-serif",lineHeight:1.6 }}>
+                ✦ If your itinerary includes any of the above, the AI will have flagged them in your <strong style={{ color:"#1a1a1a" }}>Practical Notes</strong> section. Check there for specific links and recommendations.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Where to Stay ── */}
         {activeSection==="stay"&&(
           <div style={{ animation:"fadeUp 0.3s ease" }}>
             {itinerary?.locations?.length>0?(
@@ -1639,9 +1709,9 @@ function BookingPage({ itinerary, answers, onBack, onHome }) {
                 {itinerary.locations.map((loc,i)=>(
                   <div key={i}>
                     <div style={{ fontSize:11,letterSpacing:"0.1em",textTransform:"uppercase",color:"#003580",marginBottom:8,fontWeight:600 }}>📍 {loc.location} · {loc.nights} nights</div>
-                    <HotelTile hotel={loc.hotel} location={loc.location} tier="recommended" bookingUrl={loc.hotel?.bookingUrl}/>
-                    {loc.alternatives?.budget && <div style={{ marginTop:10 }}><HotelTile hotel={loc.alternatives.budget} location={loc.location} tier="budget" bookingUrl={loc.alternatives.budget?.bookingUrl}/></div>}
-                    {loc.alternatives?.luxury && <div style={{ marginTop:10 }}><HotelTile hotel={loc.alternatives.luxury} location={loc.location} tier="luxury" bookingUrl={loc.alternatives.luxury?.bookingUrl}/></div>}
+                    <HotelTile hotel={loc.hotel} location={loc.location} tier="recommended"/>
+                    {loc.alternatives?.budget && <div style={{ marginTop:10 }}><HotelTile hotel={loc.alternatives.budget} location={loc.location} tier="budget"/></div>}
+                    {loc.alternatives?.luxury && <div style={{ marginTop:10 }}><HotelTile hotel={loc.alternatives.luxury} location={loc.location} tier="luxury"/></div>}
                   </div>
                 ))}
               </div>
@@ -1650,21 +1720,8 @@ function BookingPage({ itinerary, answers, onBack, onHome }) {
             )}
           </div>
         )}
-        {activeSection==="overview"&&itinerary?.practicalInfo&&(
-          <div style={{ animation:"fadeUp 0.3s ease" }}>
-            <div style={{ background:"#fff",borderRadius:16,border:"1.5px solid #e8edf5",padding:"24px 26px",marginBottom:16 }}>
-              <h2 style={{ fontFamily:"'DM Sans',sans-serif",fontSize:22,fontWeight:400,color:"#1a1a1a",marginBottom:16 }}>Trip at a glance</h2>
-              <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12 }}>
-                {[{label:"Getting around",value:itinerary.practicalInfo.bestTransport},{label:"Must book ahead",value:itinerary.practicalInfo.mustBook},{label:"Packing tip",value:itinerary.practicalInfo.packingTip}].filter(i=>i.value).map(item=>(
-                  <div key={item.label} style={{ background:"#f8f9ff",borderRadius:10,padding:"14px 16px" }}>
-                    <div style={{ fontSize:10,letterSpacing:"0.1em",textTransform:"uppercase",color:"#003580",marginBottom:6,fontWeight:600 }}>{item.label}</div>
-                    <div style={{ fontSize:13.5,color:"#444",lineHeight:1.5 }}>{item.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+
+        {/* ── Day by Day ── */}
         {activeSection==="days"&&(
           <div style={{ animation:"fadeUp 0.3s ease",display:"grid",gridTemplateColumns:"200px 1fr",gap:24,alignItems:"start" }}>
             <div style={{ background:"#fff",borderRadius:14,border:"1.5px solid #e8edf5",overflow:"hidden",position:"sticky",top:96 }}>
@@ -1861,8 +1918,24 @@ export default function RoamHomepage() {
   const [answers, setAnswers] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [showTrips, setShowTrips] = useState(false);
+  const [presetTripType, setPresetTripType] = useState(null);
 
-  const goHome = () => { setPage("home"); setShowSettings(false); setShowTrips(false); };
+  const goHome = () => { setPage("home"); setShowSettings(false); setShowTrips(false); setPresetTripType(null); };
+
+  const AUDIENCE_TRIP_TYPE_MAP = {
+    "Business Travel": "business",
+    "Family Holidays": "family",
+    "Couples & Romance": "romance",
+    "Adventure & Exploration": "adventure",
+    "Education": "culture",
+    "Culture": "culture",
+  };
+
+  const openPlannerWithType = (label) => {
+    const tripType = AUDIENCE_TRIP_TYPE_MAP[label] || null;
+    setPresetTripType(tripType);
+    setPage("app");
+  };
   const goPage = p => setPage(p);
   const sharedProps = { user, onSignIn:()=>setAuthModal("signin"), onSignUp:()=>setAuthModal("signup"), onBookings:()=>user?setPage("bookings"):setAuthModal("signin"), onSignOut:()=>setUser(null), onPage:goPage, onHome:goHome, onSettings:()=>setShowSettings(true), onTrips:()=>user?setShowTrips(true):setAuthModal("signin") };
 
@@ -1888,7 +1961,7 @@ export default function RoamHomepage() {
             <AccountDropdown {...sharedProps}/>
           </div>
         </nav>
-        <RoamApp onItineraryReady={(itin,ans)=>{setItinerary(itin);setAnswers(ans);}} onBookNow={()=>setPage("booking")}/>
+        <RoamApp onItineraryReady={(itin,ans)=>{setItinerary(itin);setAnswers(ans);}} onBookNow={()=>setPage("booking")} presetTripType={presetTripType}/>
       </div>
     );
   }
@@ -1965,12 +2038,17 @@ export default function RoamHomepage() {
           <div className="audience-grid">
             {AUDIENCE_DATA.map((a,i)=>(
               <div key={a.label} style={{ opacity:0,transform:"translateY(28px)",animation:`fadeUp 0.7s ease ${i*0.08}s forwards` }}>
-                <div className="audience-card" style={{ borderRadius:14,overflow:"hidden",position:"relative",height:340,boxShadow:"0 8px 32px rgba(0,0,0,0.12)" }}>
+                <div className="audience-card" onClick={()=>openPlannerWithType(a.label)} style={{ borderRadius:14,overflow:"hidden",position:"relative",height:340,boxShadow:"0 8px 32px rgba(0,0,0,0.12)",cursor:"pointer",transition:"transform 0.2s, box-shadow 0.2s" }}
+                  onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-6px)";e.currentTarget.style.boxShadow="0 20px 48px rgba(0,0,0,0.22)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 8px 32px rgba(0,0,0,0.12)";}}>
                   <img src={a.photo} alt={a.label} style={{ width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0 }}/>
                   <div style={{ position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,0.82) 0%,rgba(0,0,0,0.1) 55%)" }}/>
                   <div style={{ position:"absolute",bottom:22,left:22,right:22 }}>
                     <div style={{ fontFamily:"'DM Sans',sans-serif",fontSize:22,fontWeight:400,color:"#fff",marginBottom:6 }}>{a.label}</div>
                     <div style={{ fontSize:13,color:"rgba(255,255,255,0.75)",lineHeight:1.5 }}>{a.desc}</div>
+                    <div style={{ marginTop:10,display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.15)",backdropFilter:"blur(4px)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"#fff",fontFamily:"'DM Sans',sans-serif" }}>
+                      Plan this trip →
+                    </div>
                   </div>
                 </div>
               </div>
